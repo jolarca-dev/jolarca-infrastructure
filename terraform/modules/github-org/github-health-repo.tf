@@ -2,6 +2,11 @@
 # other community health files) from this repo to every org repo that lacks
 # its own copy — this is how "SECURITY.md inherited from org .github repo"
 # is realized; no per-repo resource is needed for the inheritance itself.
+#
+# checkov:skip=CKV_GIT_1: must be public — GitHub only serves org-wide
+# community health files from a public .github repository.
+# checkov:skip=CKV2_GIT_1: content-only health repo; it is excluded from
+# the fleet branch-protection map by design (no code, no CI).
 resource "github_repository" "dot_github" {
   name        = ".github"
   description = "Organization default community health files (SECURITY.md, CODE_OF_CONDUCT.md)"
