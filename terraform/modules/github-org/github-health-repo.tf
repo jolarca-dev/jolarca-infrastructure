@@ -7,6 +7,9 @@ resource "github_repository" "dot_github" {
   # community health files from a public .github repository.
   # checkov:skip=CKV2_GIT_1: content-only health repo; excluded from the
   # fleet branch-protection map by design (no code, no CI).
+  //tfsec:ignore:github-repositories-private
+  //tfsec:ignore:github-repositories-enable_vulnerability_alerts
+  # (tfsec ignores mirror the checkov skips documented above.)
   name        = ".github"
   description = "Organization default community health files (SECURITY.md, CODE_OF_CONDUCT.md)"
   visibility  = "public"

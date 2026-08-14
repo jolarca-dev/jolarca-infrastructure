@@ -19,6 +19,8 @@ resource "github_branch_protection" "main" {
   # seeded automation commits (github_repository_file, jolm-infra-
   # automation) cannot be GPG-signed; revisit if commit-signing infra for
   # automation lands.
+  //tfsec:ignore:github-branch_protections-require_signed_commits
+  # (tfsec ignore mirrors CKV_GIT_6 above.)
   for_each = var.enable_branch_protection ? var.repositories : {}
 
   repository_id = github_repository.repos[each.key].name

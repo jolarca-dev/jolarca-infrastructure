@@ -12,6 +12,9 @@ resource "github_repository" "repos" {
   # checkov:skip=CKV_GIT_3: Dependabot vulnerability alerts ARE enabled for
   # every repo in this map via github_repository_vulnerability_alerts.repos
   # (for_each over the same variable); checkov cannot follow the linkage.
+  //tfsec:ignore:github-repositories-private
+  //tfsec:ignore:github-repositories-enable_vulnerability_alerts
+  # (tfsec ignores mirror the checkov skips documented above.)
   for_each = var.repositories
 
   name        = each.key
