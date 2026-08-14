@@ -31,7 +31,19 @@ custodians; no single person may hold, use, or rotate it alone.
    repos need GitHub Team+; the current plan cannot enforce the manual
    approval step on `production` applies. Compensating controls: write
    token isolated in the environment secret, dispatch limited to repo
-   collaborators, all applies visible via drift detection.
+   collaborators, all applies visible via drift detection. Plan upgrade
+   intentionally deferred — with a single operator it would add no control
+   value (see deviation 3).
+3. **Solo-era operation**: exactly one operator exists today; a second
+   person (programmer, designated future second custodian) is not yet
+   engaged. All human review gates (branch-protection review counts,
+   CODEOWNERS reviews, dual control) are deferred and enforcement rides on
+   automated gates (required status checks, policy scans, drift
+   detection). Activation checklist lives in CONTRIBUTING.md
+   ("Onboarding trigger"). Until then: sole operator is custodian of every
+   credential above marked single-holder; every *(dual)* item is held in
+   escrow-as-design only, with the sole operator as interim holder —
+   logged in the access review each quarter.
 
 ## Invariants
 

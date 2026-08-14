@@ -20,6 +20,20 @@ Production-affecting and security-sensitive paths require review beyond the
 author. CODEOWNERS routes reviews; branch protection sets the required
 approving count. The author never self-approves.
 
+**Solo-era operation (current):** the org has exactly one operator, so
+human review gates are deferred — an author cannot approve their own PR,
+and a review requirement would lock the sole maintainer out. Enforcement
+rides entirely on the automated gates: required `ci` + `security` status
+checks, plan-first workflow, and daily drift detection. This is a tracked
+deviation (`security/key-custody.md`), not an exemption: the rule and
+CODEOWNERS routing stay in place and activate when the second operator
+onboards.
+
+**Onboarding trigger (second operator):** add to `@security`/operators
+teams, set `required_approving_review_count >= 1` and re-enable CODEOWNERS
+reviews in `terraform/environments/production/main.tf`, split the interim
+shared PAT (issue on file), then record the change in the access review.
+
 Security-sensitive paths (non-exhaustive): `terraform/backends/`,
 `terraform/policies/`, `ansible/vault/`, `security/`, `scripts/`,
 `.github/workflows/`, `kubernetes/policies/`.

@@ -47,6 +47,16 @@ module "github_org" {
 
   enable_branch_protection = var.enable_branch_protection
 
+  # SOLO-ERA DEVIATION (tracked: security/key-custody.md): with a single
+  # operator, human review gates are unsatisfiable — an author can never
+  # approve their own PR, so the module defaults (1 review + CODEOWNERS
+  # reviews) would lock the sole maintainer out. Enforcement in the solo
+  # era rides on the automated gates: required status checks (ci/security)
+  # still apply, enforce_admins stays true. Raise review count to >= 1 and
+  # re-enable CODEOWNERS reviews the day the second operator onboards.
+  required_approving_review_count = 0
+  require_code_owner_reviews      = false
+
   # Fleet, protection policy, and status-check contexts come from module
   # defaults; override here only when the marketplace policy changes.
 }

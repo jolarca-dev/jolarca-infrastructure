@@ -42,3 +42,9 @@ commits follow Conventional Commits. Infra changes are auditable history
   `staging-readonly` environment created. Secrets are repo-scoped by
   design; interim deviations (shared classic PAT, no environment approval
   gate on the current plan) documented in security/key-custody.md.
+- Solo-era operating model adopted (single operator): human review gates
+  deferred (review count 0, CODEOWNERS reviews off in the production root
+  module override), automated gates (required ci/security status checks)
+  remain mandatory. Onboarding trigger for the second operator documented
+  in CONTRIBUTING.md; deviation tracked in security/key-custody.md. No
+  billing-plan upgrade required or planned.
