@@ -26,7 +26,9 @@ jobs:
 
       - name: No state/keys referenced in tracked config
         run: |
-          ! grep -RInE '\.(tfstate|pem|key)\b' --include='*.tf' --include='*.hcl' --include='*.yml' terraform/ || {
+          # Quoted filename references only — avoids matching terraform
+          # identifiers like each.key.
+          ! grep -RInE "[\"'][^\"']*\.(tfstate|pem|key)[\"']" --include='*.tf' --include='*.hcl' --include='*.yml' terraform/ || {
             echo "state/key file reference found in IaC"; exit 1; }
 
       - name: ADR numbering continuous

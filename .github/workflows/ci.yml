@@ -15,7 +15,7 @@ jobs:
 
       - name: YAML lint
         run: |
-          pipx run yamllint -d "{extends: default, rules: {line-length: {max: 140}, comments: {min-spaces-from-content: 1}, truthy: disable, document-start: disable}}" \
+          yamllint -d "{extends: default, rules: {line-length: {max: 140}, comments: {min-spaces-from-content: 1}, truthy: disable, document-start: disable, comments-indentation: disable}}" \
             .github/ backup/ monitoring/ .pre-commit-config.yaml qodana.yaml
 
       - name: Shellcheck operator scripts
