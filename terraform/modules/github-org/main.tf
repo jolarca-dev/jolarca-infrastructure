@@ -1,15 +1,14 @@
 # Marketplace Tier-1 repository fleet. Visibility and license are declared
 # here and enforced by terraform — drift corrected on every apply.
-#
-# checkov:skip=CKV_GIT_1: jol-m-marketplace is INTENTIONALLY public — it is
-# the open-source marketplace application (AGPL-3.0). The infrastructure,
-# compliance, legal, and data repos in this fleet are private. Visibility
-# is a deliberate per-repo policy decision, not a misconfiguration.
-# checkov:skip=CKV2_GIT_1: branch protection IS declared for every repo in
-# this map via github_branch_protection.main (branch-protection.tf,
-# for_each over the same variable); checkov cannot follow the for_each
-# linkage. Two-phase bootstrap may temporarily create repos unprotected.
 resource "github_repository" "repos" {
+  # checkov:skip=CKV_GIT_1: jol-m-marketplace is INTENTIONALLY public — it
+  # is the open-source marketplace application (AGPL-3.0). The
+  # infrastructure, compliance, legal, and data repos in this fleet are
+  # private. Visibility is a deliberate per-repo policy decision.
+  # checkov:skip=CKV2_GIT_1: branch protection IS declared for every repo
+  # in this map via github_branch_protection.main (branch-protection.tf,
+  # for_each over the same variable); checkov cannot follow the for_each
+  # linkage. Two-phase bootstrap may temporarily leave repos unprotected.
   for_each = var.repositories
 
   name        = each.key

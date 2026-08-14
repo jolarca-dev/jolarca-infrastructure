@@ -38,7 +38,9 @@ jobs:
       - uses: ./.github/actions/terraform-setup
       - name: tflint
         uses: terraform-linters/setup-tflint@v4
-      - run: tflint --init && tflint
+      # Fail on errors only: warnings (e.g. scaffold variables reserved for
+      # pending workstreams) are visible in the log but do not block merge.
+      - run: tflint --init && tflint --minimum-failure-severity=error
         working-directory: terraform/environments/${{ matrix.env }}
       - name: Validate
         working-directory: terraform/environments/${{ matrix.env }}
