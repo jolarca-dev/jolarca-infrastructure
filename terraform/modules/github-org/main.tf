@@ -14,7 +14,9 @@ resource "github_repository" "repos" {
   # (for_each over the same variable); checkov cannot follow the linkage.
   //tfsec:ignore:github-repositories-private
   //tfsec:ignore:github-repositories-enable_vulnerability_alerts
-  # (tfsec ignores mirror the checkov skips documented above.)
+  #trivy:ignore:GIT-0001
+  #trivy:ignore:GIT-0003
+  # (tfsec/trivy ignores mirror the checkov skips documented above.)
   for_each = var.repositories
 
   name        = each.key

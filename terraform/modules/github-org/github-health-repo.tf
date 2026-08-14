@@ -9,7 +9,9 @@ resource "github_repository" "dot_github" {
   # fleet branch-protection map by design (no code, no CI).
   //tfsec:ignore:github-repositories-private
   //tfsec:ignore:github-repositories-enable_vulnerability_alerts
-  # (tfsec ignores mirror the checkov skips documented above.)
+  #trivy:ignore:GIT-0001
+  #trivy:ignore:GIT-0003
+  # (tfsec/trivy ignores mirror the checkov skips documented above.)
   name        = ".github"
   description = "Organization default community health files (SECURITY.md, CODE_OF_CONDUCT.md)"
   visibility  = "public"

@@ -20,7 +20,8 @@ resource "github_branch_protection" "main" {
   # automation) cannot be GPG-signed; revisit if commit-signing infra for
   # automation lands.
   //tfsec:ignore:github-branch_protections-require_signed_commits
-  # (tfsec ignore mirrors CKV_GIT_6 above.)
+  #trivy:ignore:GIT-0004
+  # (tfsec/trivy ignores mirror CKV_GIT_6 above.)
   for_each = var.enable_branch_protection ? var.repositories : {}
 
   repository_id = github_repository.repos[each.key].name
