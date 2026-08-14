@@ -29,3 +29,11 @@ commits follow Conventional Commits. Infra changes are auditable history
 
 - Renamed `terraform/environments/prod/` to `terraform/environments/production/`
   for consistent environment naming before remote-state migration.
+- Imported the out-of-band-created `jol-m-infrastructure` repository into
+  production Terraform state (`github_repository` +
+  `github_repository_vulnerability_alerts`); pending reconciliation:
+  merge-method policy, delete-branch-on-merge, Dependabot alerts enablement.
+- `scripts/audit-no-secrets.sh`: added a documented, removable exception for
+  the canonical local-backend state paths while `backend "local"` is the
+  declared custody (ADR-0003 pending). All other state locations remain
+  forbidden. Shellcheck-clean.

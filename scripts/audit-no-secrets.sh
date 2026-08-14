@@ -8,6 +8,14 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SELF="$REPO_ROOT/scripts/audit-no-secrets.sh"
 cd "$REPO_ROOT"
 
+# LOCAL BACKEND EXCEPTION (ADR-0003 pending): while terraform uses
+# backend "local", the canonical state paths ARE the custody location and
+# must not be flagged. Every other state location remains forbidden.
+# REMOVE this exception block once remote GCS state lands.
+CANON_STATE_RE='^\./terraform/environments/(staging|production)/(\.terraform/)?terraform\.tfstate(\.backup)?$'
+# Same paths, but matching grep -n output lines (path:line:content).
+CANON_STATE_GREP_RE='^\./terraform/environments/(staging|production)/(\.terraform/)?terraform\.tfstate(\.backup)?:'
+
 status=0
 
 # 1) Forbidden file names (state / keys / vault passwords).
@@ -20,7 +28,7 @@ done < <(find . -path ./.git -prune -o \
      -o -name '.vault-pass*' -o -name '*-vault-pass*' -o -name 'vault_pass*' \
      -o -name '.envrc' -o -name 'id_rsa*' -o -name 'id_ed25519*' \) \
   ! -name 'rotate-vault-password.sh' \
-  -print 2>/dev/null | grep -v '\.gitkeep' || true)
+  -print 2>/dev/null | grep -v '\.gitkeep' | grep -vE "$CANON_STATE_RE" || true)
 # Note: rotate-vault-password.sh is the dual-control HELPER, not a password
 # file — the only sanctioned exception to the *-vault-pass* pattern.
 
@@ -35,7 +43,7 @@ TFSTATE_MARK='"terraform_version"[[:space:]]*:'
 
 hits="$(grep -RInE "$GH|$GH2|$PK|$SLACK|$AGE|$TFSTATE_MARK" . \
   --exclude-dir=.git --exclude-dir=.terraform \
-  --exclude="$(basename "$SELF")" 2>/dev/null || true)"
+  --exclude="$(basename "$SELF")" 2>/dev/null | grep -vE "$CANON_STATE_GREP_RE" || true)"
 if [ -n "$hits" ]; then
   echo "FORBIDDEN CONTENT:"
   echo "$hits"
