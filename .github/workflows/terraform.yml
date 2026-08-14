@@ -1,10 +1,14 @@
 # terraform.yml — fmt -> validate -> tflint -> checkov -> plan (PR)
 # and gated apply (main, manual dispatch, environment approval).
 #
-# Credential model: TF_GITHUB_TOKEN is a fine-grained PAT stored as an org
-# secret (custody: security/key-custody.md, rotated per runbook). Plan uses
-# a READ-scoped token; apply uses a separate WRITE-scoped token available
-# only to the "production" environment behind manual approval.
+# Credential model: TF_GITHUB_TOKEN is a PAT stored as a REPO secret —
+# repo-scoped custody by design (smaller blast radius than org secrets;
+# these tokens are only consumed by this repo's workflows).
+# Custody: security/key-custody.md, rotated per runbook. Plan uses a
+# READ-scoped token; apply uses a separate WRITE-scoped token available
+# only to the "production" environment. NOTE: required-reviewer approval
+# gates need GitHub Team+ for private org repos; until then the gate is
+# repo write access + environment secret separation (tracked gap).
 name: terraform
 on:
   pull_request:

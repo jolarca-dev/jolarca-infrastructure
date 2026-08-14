@@ -37,3 +37,8 @@ commits follow Conventional Commits. Infra changes are auditable history
   the canonical local-backend state paths while `backend "local"` is the
   declared custody (ADR-0003 pending). All other state locations remain
   forbidden. Shellcheck-clean.
+- CI credential plane wired: repo secret `TF_GITHUB_TOKEN_READONLY`,
+  environment secret `TF_GITHUB_TOKEN_WRITE` on `production`, and the
+  `staging-readonly` environment created. Secrets are repo-scoped by
+  design; interim deviations (shared classic PAT, no environment approval
+  gate on the current plan) documented in security/key-custody.md.
