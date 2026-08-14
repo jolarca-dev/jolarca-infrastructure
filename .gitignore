@@ -53,3 +53,7 @@ ansible/inventories/**/artifacts/
 .vscode/
 *.swp
 .DS_Store
+
+# ── Python virtual environments (tooling harness only — no runtime code) ──
+.venv/
+venv/
