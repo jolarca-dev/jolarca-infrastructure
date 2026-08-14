@@ -10,11 +10,8 @@
 # Provider/version pins live in versions.tf (single source of truth).
 # Backend stays local/disabled until the state-bucket workstream lands;
 # flip to GCS via ADR-0003 using backends/staging.backend.hcl.
-
-terraform {
-  # Phase 1: no remote state. Migration tracked in ADR-0003.
-  backend "local" {}
-}
+# (No explicit backend block: the implicit local default keeps CI dry
+# plans working with `init -backend=false`.)
 
 # GitHub-org governance is org-global (one org), so staging does NOT manage
 # the repository fleet — that belongs to production only. Staging instead

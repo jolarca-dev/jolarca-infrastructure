@@ -17,10 +17,11 @@ terraform {
     }
   }
 
-  # Local backend for the initial bootstrap. Migration to encrypted GCS
-  # state is tracked by ADR-0003 (this repo) using backends/production
-  # .backend.hcl; state contains no secrets, only repo/protection metadata.
-  backend "local" {}
+  # Local backend (the implicit default — no explicit block, because an
+  # explicit backend declaration breaks `init -backend=false` dry plans in
+  # CI). Migration to encrypted GCS state is tracked by ADR-0003 (this
+  # repo) using backends/production.backend.hcl; state contains no
+  # secrets, only repo/protection metadata.
 }
 
 provider "github" {
