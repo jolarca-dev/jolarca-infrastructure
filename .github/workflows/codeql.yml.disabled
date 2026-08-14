@@ -1,3 +1,10 @@
+# DISABLED 2026-08 (renamed from codeql.yml): CodeQL code scanning requires
+# GitHub Advanced Security, which is not part of the current plan for
+# private repositories (upload fails: "Code Security must be enabled").
+# Static analysis of the pipeline is currently covered by: yamllint +
+# shellcheck + action pin review + gitleaks. Re-enable by restoring this
+# file to codeql.yml IF GitHub Advanced Security is purchased.
+#
 # codeql.yml — inherited baseline: static analysis over pipeline definitions.
 # This repo has no application code; CodeQL analyzes the GitHub Actions
 # workflows themselves (workflow injection is a real infra supply-chain risk).

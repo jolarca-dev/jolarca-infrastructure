@@ -48,3 +48,14 @@ commits follow Conventional Commits. Infra changes are auditable history
   remain mandatory. Onboarding trigger for the second operator documented
   in CONTRIBUTING.md; deviation tracked in security/key-custody.md. No
   billing-plan upgrade required or planned.
+- CI pipeline stabilized to green on main: real action SHAs, codeql
+  checkout permissions, compliance grep false positive fixed, gitleaks
+  moved to the pinned free CLI (the action became license-gated),
+  documented checkov/tfsec skips for intentionally-public repos and
+  for_each-linked resources.
+- Scanners rationalized: tfsec removed (archived upstream, rule set lives
+  on in the Trivy config scan that runs in the same workflow); CodeQL
+  disabled (.yml.disabled) because code scanning on private repos needs
+  GitHub Advanced Security — re-enable condition documented in the file.
+  Both removals leave no coverage hole: Trivy covers IaC misconfiguration,
+  yamllint/shellcheck/pinned-action review cover pipeline definitions.

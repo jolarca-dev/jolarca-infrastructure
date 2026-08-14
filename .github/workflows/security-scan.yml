@@ -33,8 +33,10 @@ jobs:
       - name: Checkov (IaC misconfiguration)
         run: pipx run checkov -d terraform --quiet --compact
 
-      - name: tfsec
-        uses: aquasecurity/tfsec-action@v1.0.3
+      # NOTE: tfsec was removed 2026-08: the project is archived upstream and
+      # its rule set merged into Trivy (next step), which is maintained.
+      # Running an abandoned scanner next to its successor is debt, not
+      # defense. Revisit only if a maintained fork appears.
 
       - name: Trivy config scan
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
