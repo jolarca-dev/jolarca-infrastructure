@@ -2,6 +2,7 @@
 # other community health files) from this repo to every org repo that lacks
 # its own copy — this is how "SECURITY.md inherited from org .github repo"
 # is realized; no per-repo resource is needed for the inheritance itself.
+#trivy:ignore:GIT-0001 trivy:ignore:GIT-0003
 resource "github_repository" "dot_github" {
   # checkov:skip=CKV_GIT_1: must be public — GitHub only serves org-wide
   # community health files from a public .github repository.
@@ -9,8 +10,6 @@ resource "github_repository" "dot_github" {
   # fleet branch-protection map by design (no code, no CI).
   //tfsec:ignore:github-repositories-private
   //tfsec:ignore:github-repositories-enable_vulnerability_alerts
-  #trivy:ignore:GIT-0001
-  #trivy:ignore:GIT-0003
   # (tfsec/trivy ignores mirror the checkov skips documented above.)
   name        = ".github"
   description = "Organization default community health files (SECURITY.md, CODE_OF_CONDUCT.md)"

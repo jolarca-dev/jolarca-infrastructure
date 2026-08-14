@@ -8,6 +8,7 @@
 # can be seeded; phase 2 flips the flag and protection applies. Note that
 # required status checks will block ALL PRs until matching workflows exist,
 # so phase 2 must land together with (or after) the first workflow PRs.
+#trivy:ignore:GIT-0004
 resource "github_branch_protection" "main" {
   # checkov:skip=CKV_GIT_5: SOLO-ERA DEVIATION (tracked:
   # security/key-custody.md, CONTRIBUTING.md). With one operator, 2 — or
@@ -20,7 +21,6 @@ resource "github_branch_protection" "main" {
   # automation) cannot be GPG-signed; revisit if commit-signing infra for
   # automation lands.
   //tfsec:ignore:github-branch_protections-require_signed_commits
-  #trivy:ignore:GIT-0004
   # (tfsec/trivy ignores mirror CKV_GIT_6 above.)
   for_each = var.enable_branch_protection ? var.repositories : {}
 
