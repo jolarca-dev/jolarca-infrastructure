@@ -1,0 +1,22 @@
+# CODEOWNERS — routes reviews; the approving-review COUNT is enforced by
+# branch protection / rulesets (see CONTRIBUTING.md, two-person rule).
+# CODEOWNERS alone cannot require N approvers — do not rely on it for that.
+
+# Default: infrastructure operators
+*                                       @journeyoflife-org/infra-operators
+
+# Security-sensitive paths — two-person rule applies via branch protection
+/security/                              @journeyoflife-org/security
+/terraform/backends/                    @journeyoflife-org/security @journeyoflife-org/infra-operators
+/terraform/policies/                    @journeyoflife-org/security
+/kubernetes/policies/                   @journeyoflife-org/security
+/ansible/vault/                         @journeyoflife-org/security
+/scripts/                               @journeyoflife-org/infra-operators @journeyoflife-org/security
+/.github/workflows/                     @journeyoflife-org/infra-operators @journeyoflife-org/security
+/.github/actions/                       @journeyoflife-org/infra-operators
+/docs/runbooks/state-compromise.md      @journeyoflife-org/security
+
+# Compliance documentation must be reviewed with compliance in the loop
+/docs/adr/                              @journeyoflife-org/infra-operators
+/security/pci-dss-scope.md              @journeyoflife-org/security @journeyoflife-org/compliance
+/security/access-review.md              @journeyoflife-org/compliance

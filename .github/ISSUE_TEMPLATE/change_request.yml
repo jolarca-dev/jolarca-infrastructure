@@ -1,0 +1,39 @@
+name: Infrastructure change request
+description: MANDATORY for any change that touches real resources. Fields below are merge prerequisites (SOC 2 CC8.1).
+labels: ["change-request"]
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Change summary
+      description: What changes and why. Link related ADRs where applicable.
+    validations:
+      required: true
+  - type: dropdown
+    id: risk
+    attributes:
+      label: Risk class (CONTRIBUTING.md)
+      options: [Low, Med, High, Crit]
+    validations:
+      required: true
+  - type: textarea
+    id: blast
+    attributes:
+      label: Blast radius
+      description: Which systems, environments, and data flows are affected if this change misbehaves? Name them explicitly.
+    validations:
+      required: true
+  - type: textarea
+    id: rollback
+    attributes:
+      label: Rollback plan
+      description: Exact steps to revert (inverse plan, state version, restore reference). Changes without a rollback plan are closed.
+    validations:
+      required: true
+  - type: dropdown
+    id: window
+    attributes:
+      label: Change window required?
+      options: ["no", "yes — staging first", "yes — scheduled production window"]
+    validations:
+      required: true

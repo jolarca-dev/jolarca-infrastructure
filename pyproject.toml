@@ -1,0 +1,23 @@
+# Tool configuration for the infrastructure repository.
+# Python tooling here exists only to support lint/pre-commit harnesses;
+# there is no application code in this repository.
+#
+# Note: ansible-lint and yamllint read their own config files
+# (.ansible-lint / .yamllint) when the ansible workstream lands.
+
+[project]
+name = "jol-m-infrastructure-tooling"
+version = "0.1.0"
+description = "Operator tooling pins for lint/pre-commit harnesses (no runtime code)."
+requires-python = ">=3.11"
+dependencies = [
+    "ansible-lint>=24.9",
+    "checkov>=3.2",
+    "pre-commit>=3.8",
+    "yamllint>=1.35",
+]
+
+[tool.codespell]
+# Spelling hygiene for docs/ADR review gates.
+skip = "*.tfstate,*.lock.hcl,.terraform"
+ignore-words-list = "iam"

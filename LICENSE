@@ -1,0 +1,16 @@
+Copyright (c) 2026 Journey of Life. All rights reserved.
+
+This repository is PRIVATE. It contains infrastructure architecture,
+network topology hints, and security doctrine that must not be disclosed.
+
+INTERNAL USE ONLY. No part of this repository may be copied, distributed,
+published, mirrored, or incorporated into any public repository, artifact,
+or derivative work without prior written authorization from the
+Journey of Life security function.
+
+The license governing the public marketplace application code lives in the
+respective public repositories (see jol-m-marketplace). This notice governs
+internal reuse of infrastructure-as-code within the organization only.
+
+Unauthorized disclosure of this material is treated as a security incident
+(see SECURITY.md and docs/runbooks/state-compromise.md).

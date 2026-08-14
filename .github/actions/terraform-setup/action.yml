@@ -1,0 +1,23 @@
+# Composite action: shared Terraform setup for all workflows.
+# Pin the CLI version here ONLY — single source of truth (SOC 2 CC8.1).
+name: "terraform-setup"
+description: "Install pinned Terraform CLI and run fmt check"
+inputs:
+  terraform_version:
+    description: "Terraform CLI version (pinned)"
+    required: false
+    default: "1.9.8"
+runs:
+  using: "composite"
+  steps:
+    - name: Install Terraform
+      uses: hashicorp/setup-terraform@b13d2c0c9e8c46921cb37c0a3b2cfe4ae6b3c91d # v3.1.2
+      with:
+        terraform_version: ${{ inputs.terraform_version }}
+        terraform_wrapper: false
+    - name: Terraform version check
+      shell: bash
+      run: terraform version
+    - name: Terraform fmt check
+      shell: bash
+      run: terraform fmt -check -recursive terraform

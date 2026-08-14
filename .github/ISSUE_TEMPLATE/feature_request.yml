@@ -1,0 +1,25 @@
+name: Feature request
+description: New capability for the infrastructure plane
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: capability
+    attributes:
+      label: Capability
+      description: What should the infrastructure be able to do, and why now?
+    validations:
+      required: true
+  - type: textarea
+    id: compliance
+    attributes:
+      label: Compliance impact
+      description: Which controls (SOC 2 / ISO 27001 / GDPR / PCI-DSS) are touched? Does this widen or shrink trust boundaries?
+    validations:
+      required: true
+  - type: dropdown
+    id: plane
+    attributes:
+      label: Target plane
+      options: [terraform, ansible, kubernetes, ci-cd, monitoring, backup-dr, other]
+    validations:
+      required: true

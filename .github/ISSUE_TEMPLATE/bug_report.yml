@@ -1,0 +1,32 @@
+name: Bug report
+description: Defect in infrastructure-as-code or its pipeline (NOT a vulnerability — use SECURITY.md for those)
+labels: ["bug"]
+body:
+  - type: textarea
+    id: behavior
+    attributes:
+      label: Observed vs expected behavior
+      description: What happened, what should have happened. Redact tokens/keys.
+    validations:
+      required: true
+  - type: dropdown
+    id: plane
+    attributes:
+      label: Affected plane
+      options: [terraform, ansible, kubernetes, ci-cd, monitoring, docs, other]
+    validations:
+      required: true
+  - type: dropdown
+    id: environment
+    attributes:
+      label: Environment
+      options: [staging, production, both, n/a]
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Reproduction
+      description: Minimal steps or plan/state excerpt (REDACTED — never paste secrets).
+    validations:
+      required: true

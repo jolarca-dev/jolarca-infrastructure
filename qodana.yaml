@@ -1,0 +1,15 @@
+# Qodana static analysis — inherited from jol-repo-template baseline.
+# Infrastructure repo profile: lint docs + scripts; Terraform/Ansible
+# analysis is handled by the dedicated workflows (terraform.yml,
+# security-scan.yml) rather than the Qodana linter.
+version: "1.0"
+linter: jetbrains/qodana-python:2025.1
+profile:
+  name: qodana.recommended
+exclude:
+  - name: All
+    paths:
+      - terraform/.terraform
+      - ansible/roles/*/molecule/.cache
+include:
+  - name: CheckLicenseCopyright

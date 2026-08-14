@@ -1,0 +1,27 @@
+# codeql.yml — inherited baseline: static analysis over pipeline definitions.
+# This repo has no application code; CodeQL analyzes the GitHub Actions
+# workflows themselves (workflow injection is a real infra supply-chain risk).
+name: codeql
+on:
+  pull_request:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "31 4 * * 1"   # weekly Monday scan
+permissions:
+  contents: read
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: actions
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3

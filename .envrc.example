@@ -1,0 +1,24 @@
+# .envrc.example — operator environment template (direnv-compatible).
+# Copy to .envrc and fill in from Vaultwarden. .envrc is gitignored.
+# NEVER commit real values; NEVER paste tokens into issue trackers or chat.
+
+# ── Terraform: GitHub provider (github-org module) ────────────────────────
+# Fine-grained PAT, least scope: 'repo' + 'read:org' ONLY (see
+# terraform/modules/github-org/versions.tf). Rotation runbook:
+# docs/runbooks/github-token-rotation.md
+export GITHUB_TOKEN=""            # or GH_TOKEN — provider reads either
+
+# ── Terraform: GCP (lands with the GCP workstream) ────────────────────────
+# Service-account key material stays in Vaultwarden; prefer short-lived
+# workload identity federation over long-lived JSON keys.
+# export GOOGLE_APPLICATION_CREDENTIALS=""
+# export TF_VAR_project=""
+
+# ── Backend selection ─────────────────────────────────────────────────────
+# Match the environment you operate; NEVER cross-mount buckets.
+# export TF_BACKEND_CONFIG="terraform/backends/staging.backend.hcl"
+
+# ── Ansible (lands with the bare-metal workstream) ────────────────────────
+# Vault password file paths live OUTSIDE the repo (dual control).
+# export ANSIBLE_VAULT_PASSWORD_FILE="~/.vault-pass-production"
+# export ANSIBLE_CONFIG="$(pwd)/ansible/ansible.cfg"

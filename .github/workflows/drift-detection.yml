@@ -1,0 +1,46 @@
+# drift-detection.yml — scheduled reconciliation of declared IaC vs reality.
+# Unexplained drift is a security signal (possible out-of-band change);
+# it opens an issue and is tracked as change-management evidence (CC8.1).
+name: drift-detection
+on:
+  schedule:
+    - cron: "23 5 * * *"   # daily
+  workflow_dispatch: {}
+permissions:
+  contents: read
+  issues: write
+jobs:
+  drift:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: ./.github/actions/terraform-setup
+
+      - name: Drift check (production)
+        id: drift
+        continue-on-error: true
+        working-directory: terraform/environments/production
+        env:
+          GITHUB_TOKEN: ${{ secrets.TF_GITHUB_TOKEN_READONLY }}
+        run: |
+          terraform init -backend=false
+          # exit 0 = no drift, 2 = drift present, 1 = error
+          terraform plan -lock=false -detailed-exitcode
+
+      - name: Open drift issue
+        if: steps.drift.outputs.exitcode == '2'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh issue create \
+            --title "DRIFT detected in production ($(date -u +%F))" \
+            --label "drift,change-request" \
+            --body "terraform plan --detailed-exitcode reported out-of-band changes in production.
+          Triage per CONTRIBUTING.md: explain with a change record or treat as incident (SECURITY.md).
+          Run: \`scripts/check-drift.sh production\` locally for details."
+
+      - name: Fail on drift or error
+        if: steps.drift.outputs.exitcode != '0'
+        run: |
+          echo "drift/error detected (exit ${{ steps.drift.outputs.exitcode }})"
+          exit 1

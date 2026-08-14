@@ -1,0 +1,55 @@
+# .gitignore — paranoid baseline.
+# RULE: state, keys, and vault password files MUST NEVER appear in git.
+# Enforced here, by gitleaks (pre-commit + CI), and scripts/audit-no-secrets.sh.
+
+# ── Terraform ─────────────────────────────────────────────────────────────
+# Local state is the crown jewel: contains full resource metadata.
+*.tfstate
+*.tfstate.*
+*.tfplan
+plan.out
+**/.terraform/*
+**/.terraform.lock.hcl.bak
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+# Local operator overrides of backend config (may contain paths/creds)
+terraform/backends/*.local.hcl
+# Provider credentials files
+*.tfrc
+credentials.tfrc.json
+
+# ── Secrets & key material ────────────────────────────────────────────────
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.gpg
+*.agekey
+*.pubkey-private*
+id_rsa*
+id_ed25519*
+# Vault password files (ansible-vault dual control)
+.vault-pass*
+*-vault-pass*
+vault_pass*
+
+# ── Environment & credential files ────────────────────────────────────────
+.env
+.env.*
+!.envrc.example
+.envrc
+
+# ── Ansible ───────────────────────────────────────────────────────────────
+*.retry
+ansible/inventories/**/artifacts/
+
+# ── Editors / OS ──────────────────────────────────────────────────────────
+.idea/
+.vscode/
+*.swp
+.DS_Store
