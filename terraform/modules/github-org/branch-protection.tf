@@ -9,6 +9,16 @@
 # required status checks will block ALL PRs until matching workflows exist,
 # so phase 2 must land together with (or after) the first workflow PRs.
 resource "github_branch_protection" "main" {
+  # checkov:skip=CKV_GIT_5: SOLO-ERA DEVIATION (tracked:
+  # security/key-custody.md, CONTRIBUTING.md). With one operator, 2 — or
+  # even 1 — approving reviews are unsatisfiable and would lock the sole
+  # maintainer out. Enforcement rides on required status checks below.
+  # REMOVE this skip and raise the review count when the second operator
+  # onboards.
+  # checkov:skip=CKV_GIT_6: signed commits not required because provider-
+  # seeded automation commits (github_repository_file, jolm-infra-
+  # automation) cannot be GPG-signed; revisit if commit-signing infra for
+  # automation lands.
   for_each = var.enable_branch_protection ? var.repositories : {}
 
   repository_id = github_repository.repos[each.key].name

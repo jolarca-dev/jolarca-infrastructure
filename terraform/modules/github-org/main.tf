@@ -9,6 +9,9 @@ resource "github_repository" "repos" {
   # in this map via github_branch_protection.main (branch-protection.tf,
   # for_each over the same variable); checkov cannot follow the for_each
   # linkage. Two-phase bootstrap may temporarily leave repos unprotected.
+  # checkov:skip=CKV_GIT_3: Dependabot vulnerability alerts ARE enabled for
+  # every repo in this map via github_repository_vulnerability_alerts.repos
+  # (for_each over the same variable); checkov cannot follow the linkage.
   for_each = var.repositories
 
   name        = each.key
