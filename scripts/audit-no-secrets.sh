@@ -11,10 +11,13 @@ cd "$REPO_ROOT"
 # LOCAL BACKEND EXCEPTION (ADR-0003 pending): while terraform uses
 # backend "local", the canonical state paths ARE the custody location and
 # must not be flagged. Every other state location remains forbidden.
+# Included: terraform/bootstrap/ workspace state — the chicken-and-egg
+# root keeps local state BY DESIGN until the migration completes.
 # REMOVE this exception block once remote GCS state lands.
-CANON_STATE_RE='^\./terraform/environments/(staging|production)/(\.terraform/)?terraform\.tfstate(\.backup)?$'
-# Same paths, but matching grep -n output lines (path:line:content).
-CANON_STATE_GREP_RE='^\./terraform/environments/(staging|production)/(\.terraform/)?terraform\.tfstate(\.backup)?:'
+CANON_STATE_RE='^(\./terraform/environments/(staging|production)/(\.terraform/)?terraform\.tfstate(\.backup)?|\./terraform/bootstrap/terraform\.tfstate\.d/(staging|production)\.tfstate(\.backup)?)$'
+# Same paths, but matching grep -n output lines (path:line:content); the
+# bootstrap directory itself is also canonical (workspace-state home).
+CANON_STATE_GREP_RE='^(\./terraform/environments/(staging|production)/(\.terraform/)?terraform\.tfstate(\.backup)?|\./terraform/bootstrap/terraform\.tfstate\.d(/(staging|production)\.tfstate(\.backup)?)?:)'
 
 status=0
 
@@ -22,7 +25,8 @@ status=0
 while IFS= read -r f; do
   echo "FORBIDDEN FILE: $f"
   status=1
-done < <(find . -path ./.git -prune -o \
+done < <(find . \( -path ./.git -o -path ./.venv -o -path ./venv \
+  -o -path ./terraform/bootstrap/terraform.tfstate.d \) -prune -o \
   \( -name '*.tfstate' -o -name '*.tfstate.*' -o -name '*.tfplan' \
      -o -name '*.pem' -o -name '*.key' -o -name '*.p12' -o -name '*.pfx' \
      -o -name '.vault-pass*' -o -name '*-vault-pass*' -o -name 'vault_pass*' \
@@ -43,6 +47,7 @@ TFSTATE_MARK='"terraform_version"[[:space:]]*:'
 
 hits="$(grep -RInE "$GH|$GH2|$PK|$SLACK|$AGE|$TFSTATE_MARK" . \
   --exclude-dir=.git --exclude-dir=.terraform \
+  --exclude-dir=.venv --exclude-dir=venv \
   --exclude="$(basename "$SELF")" 2>/dev/null | grep -vE "$CANON_STATE_GREP_RE" || true)"
 if [ -n "$hits" ]; then
   echo "FORBIDDEN CONTENT:"

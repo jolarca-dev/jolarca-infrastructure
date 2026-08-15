@@ -15,8 +15,9 @@
 #   5. Any state file observed outside this bucket = incident:
 #      docs/runbooks/state-compromise.md.
 #
-# Bucket naming lands with scripts/bootstrap.sh (bucket names are global).
-bucket  = "REPLACE_ME-jolm-tfstate-production"
+# Bucket name is FROZEN (ADR-0003): terraform/bootstrap/main.tf creates
+# exactly this bucket; changing one without the other loses state.
+bucket  = "jolm-tfstate-production-857941"
 prefix  = "terraform/production"
 # CMEK is applied at bucket level by the state-bucket module; never put
 # key material in backend config.
