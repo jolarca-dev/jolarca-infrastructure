@@ -1,0 +1,36 @@
+# fleet-separation-guard.yml — ADR-0004 R2/R3 enforcement.
+#
+# The org hosts TWO projects that must never mix: mission platform (jol-*)
+# and marketplace (jol-m-*, PCI-DSS scope). This guard proves, on every
+# relevant change and weekly, that the org's jol-m-* repo set matches the
+# terraform fleet map EXACTLY:
+#   - out-of-band jol-m-* creation  -> incident (48h import rule)
+#   - fleet repo missing from org   -> drift/deletion alarm
+# Read-only against the org; runs with the read-scoped token.
+name: fleet-separation-guard
+on:
+  push:
+    branches: [main]
+    paths:
+      - "terraform/modules/github-org/**"
+      - "scripts/check-fleet-separation.sh"
+      - ".github/workflows/fleet-separation-guard.yml"
+  pull_request:
+    paths:
+      - "terraform/modules/github-org/**"
+      - "scripts/check-fleet-separation.sh"
+      - ".github/workflows/fleet-separation-guard.yml"
+  schedule:
+    - cron: "41 4 * * 1"   # weekly: catch out-of-band creation even without code changes
+  workflow_dispatch: {}
+permissions:
+  contents: read
+jobs:
+  fleet-guard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Fleet separation check (ADR-0004)
+        env:
+          GH_TOKEN: ${{ secrets.TF_GITHUB_TOKEN_READONLY || secrets.GITHUB_TOKEN }}
+        run: bash scripts/check-fleet-separation.sh
