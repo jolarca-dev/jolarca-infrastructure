@@ -38,6 +38,12 @@ commits follow Conventional Commits. Infra changes are auditable history
 - Runbooks/docs: `docs/runbooks/bootstrap-state-backend.md` (procedure
   of record), `docs/workload-identity-federation.md` (CI auth without
   SA keys), `STEP0_VERIFICATION.md` (operator gate checklist).
+- ADR-0004 mission/marketplace separation doctrine with enforceable
+  rules: `jol-m-*` prefix covenant, Terraform-only repo creation (48h
+  out-of-band import incident rule), module validation rejecting
+  non-marketplace fleet keys, `scripts/check-fleet-separation.sh` +
+  `fleet-separation-guard.yml` weekly/on-change CI guard, `marketplace`
+  topic marking on the five fleet repos.
 
 ### Changed
 
