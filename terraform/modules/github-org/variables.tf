@@ -12,6 +12,17 @@ variable "repositories" {
     license_template = optional(string)
     auto_init        = optional(bool, true)
   }))
+
+  # ADR-0004 R1/R3 — project separation: this module's jurisdiction is the
+  # MARKETPLACE fleet (jol-m-*) only. Mission-platform repos (jol-*) must
+  # never appear here; mixing PCI-scoped marketplace state with mission
+  # governance is a compliance boundary violation (and the CI fleet guard
+  # scripts/check-fleet-separation.sh enforces the reverse direction).
+  validation {
+    condition     = alltrue([for name, _ in var.repositories : can(regex("^jol-m-[a-z0-9][a-z0-9-]{0,50}$", name))])
+    error_message = "All fleet repositories must be named jol-m-* (ADR-0004 mission/marketplace separation)."
+  }
+
   default = {
     jol-m-marketplace = {
       description      = "Marketplace platform application code (PCI-DSS payments, KYC/AML, VAT OSS scope)."

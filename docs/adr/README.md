@@ -9,3 +9,4 @@ line. Evidence copy goes to `jol-m-compliance`.
 | 0001 | 90/10 split rationale            | Accepted   |
 | 0002 | State isolation design           | Accepted   |
 | 0003 | Encrypted remote state migration | Accepted   |
+| 0004 | Mission/marketplace separation   | Accepted   |
