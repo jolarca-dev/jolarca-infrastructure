@@ -81,8 +81,11 @@ technical, and monitored.
 - (−) Every new marketplace repo must go through Terraform (by design).
 - (−) Org-level settings (secrets, webhooks, apps) remain shared and
   MUST be audited: org secrets must never be visible to marketplace
-  workflows (token-scope gap: current CI token cannot list org secrets —
-  audit in the org UI; tracked as R4 follow-up).
+  workflows (token-scope gap: current CI token cannot list org secrets).
+  **Closed 2026-08-15:** org owner audited the org settings UI and
+  verified no org-level secret is visible to marketplace workflows
+  (R4 evidence; re-verify on every access review —
+  `security/access-review.md`).
 
 ## Compliance mapping
 
