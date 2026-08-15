@@ -50,6 +50,12 @@ Migrate each environment to a dedicated GCS backend
 6. **Migration order**: staging bucket → staging soak → production, per
    `docs/runbooks/bootstrap-state-backend.md`; every apply human-gated;
    local state securely deleted only after remote verification.
+7. **Backend declaration model** (hardened by the PR #5 CI failure):
+   configs stay backend-free until migration completes — any declared
+   backend breaks `init -backend=false` CI dry plans. The migration
+   window uses the gitignored `zz-remote-backend.tmp.tf` overlay; the
+   permanent `backend "gcs" {}` blocks land together with the WIF-ready
+   `TF_REMOTE_STATE` flip (runbook step 9).
 
 ## Alternatives considered
 

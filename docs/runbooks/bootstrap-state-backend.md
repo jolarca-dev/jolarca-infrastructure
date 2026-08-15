@@ -75,10 +75,23 @@ gcloud storage buckets get-iam-policy gs://$B
 
 ```bash
 cd ../environments/staging
-# HUMAN-GATED: migrates (empty) local state to GCS.
-terraform init -backend-config=../../backends/staging.backend.hcl -migrate-state
+
+# Backend blocks are NOT committed pre-migration (they break CI dry
+# plans). Use the gitignored overlay for the migration window:
+cat > zz-remote-backend.tmp.tf <<'EOF'
+terraform {
+  backend "gcs" {}
+}
+EOF
+
+# HUMAN-GATED: migrates (empty) local state to GCS. key=value pairs from
+# backends/staging.backend.hcl:
+terraform init -migrate-state \
+  -backend-config=bucket=jolm-tfstate-staging-3c4a45 \
+  -backend-config=prefix=terraform/staging
 terraform plan -lock=false
 # Expected: "No changes" (staging manages nothing yet).
+# The overlay stays on disk until step 9 lands the permanent block.
 ```
 
 Soak: leave staging on the remote backend until the production window.
@@ -119,9 +132,18 @@ terraform show -no-color /tmp/pre-migration.plan > /tmp/pre-migration.txt
 ## 6. Migrate PRODUCTION state
 
 ```bash
+# Same gitignored overlay as step 3:
+cat > zz-remote-backend.tmp.tf <<'EOF'
+terraform {
+  backend "gcs" {}
+}
+EOF
+
 # HUMAN-GATED: copies terraform.tfstate into
 # gs://jolm-tfstate-production-857941/terraform/production/default.tfstate
-terraform init -backend-config=../../backends/production.backend.hcl -migrate-state
+terraform init -migrate-state \
+  -backend-config=bucket=jolm-tfstate-production-857941 \
+  -backend-config=prefix=terraform/production
 # Answer 'yes' to the migration prompt ONLY after GATE 3 confirmation.
 ```
 
@@ -160,6 +182,19 @@ Then: record completion in CHANGELOG.md + change record, remove the
 LOCAL BACKEND EXCEPTION block in `scripts/audit-no-secrets.sh` (it exists
 only while local state is canonical), and file the follow-up for the WIF
 CI binding (`docs/workload-identity-federation.md`) + fleet import.
+
+## 9. Phase B — make the backend permanent (PR, after WIF is live)
+
+Once V1–V8 pass AND `docs/workload-identity-federation.md` setup is done:
+
+1. PR: commit `terraform { backend "gcs" {} }` into both environments'
+   `main.tf` (permanent home), set repo var `TF_REMOTE_STATE=true`.
+2. Delete the `zz-remote-backend.tmp.tf` overlays on every machine.
+3. Watch CI: drift/plan/apply now `init` against GCS via WIF — a red
+   run here means the gate was flipped too early (revert the var first).
+
+Until phase B merges, CI keeps dry-planning with `-backend=false`:
+expected, documented, temporary.
 
 ## Rollback (rehearse on staging first)
 

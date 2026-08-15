@@ -31,8 +31,10 @@ commits follow Conventional Commits. Infra changes are auditable history
   logging; `terraform/bootstrap/` chicken-and-egg root (workspace per
   environment, local state by design).
 - Backend configs completed (`backends/*.backend.hcl`, frozen bucket
-  names) and `backend "gcs" {}` blocks in both environments (partial
-  config at init; `-backend=false` dry plans unaffected).
+  names). Environments stay backend-free until the phase-B PR — any
+  declared backend breaks `init -backend=false` CI dry plans (proven by
+  PR #5); the migration window uses the gitignored
+  `zz-remote-backend.tmp.tf` overlay (runbook steps 3/6/9).
 - Runbooks/docs: `docs/runbooks/bootstrap-state-backend.md` (procedure
   of record), `docs/workload-identity-federation.md` (CI auth without
   SA keys), `STEP0_VERIFICATION.md` (operator gate checklist).

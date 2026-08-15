@@ -28,9 +28,9 @@ Frozen identifiers:
 | Gate | Command | Operator confirmed | Outcome |
 |------|---------|--------------------|---------|
 | ⛔ A1 | `terraform apply` (bootstrap, workspace `staging`) | ☐ timestamp/name | ☐ |
-| ⛔ A2 | `terraform init -backend-config=…staging.backend.hcl -migrate-state` (staging) | ☐ | ☐ |
+| ⛔ A2 | overlay `zz-remote-backend.tmp.tf` + `terraform init -migrate-state -backend-config=bucket=… -backend-config=prefix=…` (staging) | ☐ | ☐ |
 | ⛔ A3 | `terraform apply` (bootstrap, workspace `production`) — IRREVERSIBLE retention lock | ☐ | ☐ |
-| ⛔ A4 | `terraform init -backend-config=…production.backend.hcl -migrate-state` (production) | ☐ | ☐ |
+| ⛔ A4 | overlay `zz-remote-backend.tmp.tf` + `terraform init -migrate-state -backend-config=bucket=… -backend-config=prefix=…` (production) | ☐ | ☐ |
 
 ## V1 — Staging custody stack (after A1)
 
@@ -105,7 +105,8 @@ CI: branch protection checks `ci` + `security` green on the PR.
 
 ## V8 — Follow-ups (file as issues; do not silently drop)
 
-- [ ] WIF pool/provider + `ci_principal` binding (`docs/workload-identity-federation.md`), then flip repo var `TF_REMOTE_STATE=true`.
+- [ ] WIF pool/provider + `ci_principal` binding (`docs/workload-identity-federation.md`).
+- [ ] **Phase B PR**: permanent `backend "gcs" {}` blocks + repo var `TF_REMOTE_STATE=true`; overlays deleted; CI green remote-native.
 - [ ] Fleet import (jol-m-compliance/legal/data/marketplace) into production state — the STEP after STEP 0.
 - [ ] Key custodians recorded in `security/key-custody.md` (both KMS keys).
 - [ ] Backup layer (`backup/terraform-state/`) registered against the new buckets.

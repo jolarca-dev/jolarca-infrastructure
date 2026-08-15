@@ -66,9 +66,11 @@ That grants `roles/iam.serviceAccountTokenCreator` on
 
 1. `google-github-actions/auth` (SHA-pinned) exchanges the GitHub OIDC
    token for GCP credentials under the attribute condition above.
-2. `terraform init -backend-config=../../backends/<env>.backend.hcl`
+2. `terraform init -backend-config=bucket=<bucket>`
+   `-backend-config=prefix=terraform/<env>`
    `-backend-config=impersonate_service_account=<state SA>` — the state
-   SA is the only identity that writes state.
+   SA is the only identity that writes state. (The permanent
+   `backend "gcs" {}` blocks exist since the runbook phase-B PR.)
 
 Until `TF_REMOTE_STATE` flips, both workflows keep today's
 `-backend=false` behavior — CI never silently runs against empty state

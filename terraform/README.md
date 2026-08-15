@@ -19,8 +19,9 @@ rule + change window). Procedure of record:
 1. Apply `bootstrap/` (workspace `staging`) — runs `modules/state-bucket/`:
    dedicated bucket, CMEK, versioning, uniform access, audit logging.
 2. Verify `policies/require-cmek.rego` passes against the bucket plan.
-3. In `environments/staging`: `terraform init
-   -backend-config=../../backends/staging.backend.hcl -migrate-state`.
+3. In `environments/staging`: place the gitignored backend overlay and
+   run `terraform init -migrate-state -backend-config=bucket=… …`
+   (exact commands: runbook steps 3/6; permanent block lands in phase B).
 4. Repeat 1–3 for **production** with its own bucket + CMEK + service
    account. NEVER reuse the staging bucket or key.
 5. Import the migrated state into `backup/terraform-state/` procedure.
