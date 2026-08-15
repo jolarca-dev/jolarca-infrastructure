@@ -30,6 +30,9 @@ repos:
         args:
           - --hook-config=--parallelism-limit=4
       - id: terraform_tflint
+        # Match CI doctrine (terraform.yml): fail on errors only — scaffold
+        # warnings for pending workstreams stay visible but do not block.
+        args: [--args=--minimum-failure-severity=error]
       - id: terraform_checkov
         args:
           - --args=--quiet
@@ -39,6 +42,10 @@ repos:
     rev: v24.10.0
     hooks:
       - id: ansible-lint
+        # Pin the transitive ansible-core: unpinned pulls rot (ansible-core
+        # >= 2.19 dropped internals ansible-lint 24.x imports). Same
+        # pin-don't-float doctrine as the hook revisions above.
+        additional_dependencies: ['ansible-core<2.19']
         # Workstream pending: hook stays defined so it activates the moment
         # ansible playbooks land. Fails only on ansible files.
         files: '^ansible/.*\.(yml|yaml)$'
