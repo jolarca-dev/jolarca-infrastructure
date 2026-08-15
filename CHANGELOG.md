@@ -24,6 +24,18 @@ commits follow Conventional Commits. Infra changes are auditable history
 - ADR-0001 (90/10 split), ADR-0002 (state isolation), ADR-0003 (encrypted
   remote state migration — proposed).
 - Runbook skeletons incl. GitHub token rotation and state compromise.
+- STEP 0 (ADR-0003): `terraform/modules/state-bucket/` implemented —
+  CMEK keyring/key (90-day rotation), versioned state bucket (uniform
+  access, public-access prevention, soft delete, optional retention
+  lock), dedicated state SA, WIF impersonation binding, GCS audit
+  logging; `terraform/bootstrap/` chicken-and-egg root (workspace per
+  environment, local state by design).
+- Backend configs completed (`backends/*.backend.hcl`, frozen bucket
+  names) and `backend "gcs" {}` blocks in both environments (partial
+  config at init; `-backend=false` dry plans unaffected).
+- Runbooks/docs: `docs/runbooks/bootstrap-state-backend.md` (procedure
+  of record), `docs/workload-identity-federation.md` (CI auth without
+  SA keys), `STEP0_VERIFICATION.md` (operator gate checklist).
 
 ### Changed
 
@@ -59,3 +71,12 @@ commits follow Conventional Commits. Infra changes are auditable history
   GitHub Advanced Security — re-enable condition documented in the file.
   Both removals leave no coverage hole: Trivy covers IaC misconfiguration,
   yamllint/shellcheck/pinned-action review cover pipeline definitions.
+- ADR-0003 accepted (was Proposed): GCS + CMEK decision, alternatives,
+  rollback procedure.
+- CI: `drift-detection.yml` and `terraform.yml` apply job are
+  backend-aware behind the `TF_REMOTE_STATE` repository-variable gate
+  (WIF auth, state-SA impersonation); drift exit code now actually
+  captured; validate job covers `terraform/bootstrap/` + state-bucket
+  module (checkov).
+- `scripts/check-drift.sh` supports `TF_REMOTE_STATE=true` (same logic
+  as CI); `scripts/bootstrap.sh` checklist aligned with the runbook.
