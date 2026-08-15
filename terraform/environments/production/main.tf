@@ -17,11 +17,13 @@ terraform {
     }
   }
 
-  # Local backend (the implicit default — no explicit block, because an
-  # explicit backend declaration breaks `init -backend=false` dry plans in
-  # CI). Migration to encrypted GCS state is tracked by ADR-0003 (this
-  # repo) using backends/production.backend.hcl; state contains no
-  # secrets, only repo/protection metadata.
+  # Remote GCS backend (ADR-0003). Bucket + prefix arrive via partial
+  # config at init time; the block stays empty so `init -backend=false`
+  # dry plans (CI policy gate) keep working:
+  #   terraform init -backend-config=../../backends/production.backend.hcl
+  # Migration procedure of record:
+  #   docs/runbooks/bootstrap-state-backend.md
+  backend "gcs" {}
 }
 
 provider "github" {

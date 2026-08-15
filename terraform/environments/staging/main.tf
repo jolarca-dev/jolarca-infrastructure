@@ -19,6 +19,14 @@
 #
 # Nothing to manage yet: the GCP workstream populates this file.
 
+terraform {
+  # Remote GCS backend (ADR-0003) — declared now so the staging bucket is
+  # adopted the day the first real resource lands. Empty block + partial
+  # config keeps `init -backend=false` dry plans working:
+  #   terraform init -backend-config=../../backends/staging.backend.hcl
+  backend "gcs" {}
+}
+
 variable "environment" {
   description = "Environment name (guardrail: modules may assert on this)."
   type        = string
