@@ -17,13 +17,16 @@ terraform {
     }
   }
 
-  # Remote GCS backend (ADR-0003). Bucket + prefix arrive via partial
-  # config at init time; the block stays empty so `init -backend=false`
-  # dry plans (CI policy gate) keep working:
-  #   terraform init -backend-config=../../backends/production.backend.hcl
-  # Migration procedure of record:
-  #   docs/runbooks/bootstrap-state-backend.md
-  backend "gcs" {}
+  # NO backend block here — doctrine hardened by experience (eb080bf, PR #5
+  # CI failure): any declared backend breaks `init -backend=false` CI dry
+  # plans. Remote GCS state (ADR-0003) lands in two phases:
+  #   phase A (migration window): the operator drops the gitignored overlay
+  #     zz-remote-backend.tmp.tf (`terraform { backend "gcs" {} }`) and runs
+  #     `terraform init -backend-config=bucket=... -backend-config=prefix=...
+  #     -migrate-state` (values: ../backends/production.backend.hcl).
+  #   phase B (post-migration PR): the block lands here permanently,
+  #     together with the TF_REMOTE_STATE CI flip (WIF credentials live).
+  # Procedure of record: docs/runbooks/bootstrap-state-backend.md
 }
 
 provider "github" {

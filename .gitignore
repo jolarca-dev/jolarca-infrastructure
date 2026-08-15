@@ -7,6 +7,8 @@
 *.tfstate
 *.tfstate.*
 *.tfplan
+# Migration-window backend overlay (ADR-0003 runbook) — never committed:
+terraform/environments/**/zz-remote-backend.tmp.tf
 plan.out
 **/.terraform/*
 **/.terraform.lock.hcl.bak

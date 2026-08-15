@@ -18,14 +18,11 @@
 # exercises GCP modules (networking/iam/gke/dns) once they land.
 #
 # Nothing to manage yet: the GCP workstream populates this file.
-
-terraform {
-  # Remote GCS backend (ADR-0003) — declared now so the staging bucket is
-  # adopted the day the first real resource lands. Empty block + partial
-  # config keeps `init -backend=false` dry plans working:
-  #   terraform init -backend-config=../../backends/staging.backend.hcl
-  backend "gcs" {}
-}
+# NO backend block — remote GCS state (ADR-0003) lands in two phases:
+# migration window uses the gitignored zz-remote-backend.tmp.tf overlay;
+# the permanent block arrives with the post-migration PR + TF_REMOTE_STATE
+# flip. Params: ../../backends/staging.backend.hcl. Runbook:
+# ../../docs/runbooks/bootstrap-state-backend.md
 
 variable "environment" {
   description = "Environment name (guardrail: modules may assert on this)."
