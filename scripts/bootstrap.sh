@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 # bootstrap.sh — ONE-TIME state custody bootstrap: state buckets, CMEK keys,
-# operator IAM. Real provisioning lands with terraform/modules/state-bucket
-# (ADR-0003); this script is the guard-railed entry point and checklist.
+# operator IAM. Implemented in terraform/modules/state-bucket +
+# terraform/bootstrap (ADR-0003); this script is the guard-railed entry
+# point and checklist. Procedure of record:
+# docs/runbooks/bootstrap-state-backend.md (STEP0_VERIFICATION.md gates).
 #
 # This is a CRIT-class change: run only inside an approved change window,
 # with a second operator present (two-person rule).
@@ -20,7 +22,7 @@ Required before running:
   3. ADR-0003 accepted (docs/adr/0003-encrypted-remote-state-migration.md)
   4. Re-run with: --i-have-a-second-operator
 
-Procedure of record: terraform/README.md "State bootstrap procedure".
+Procedure of record: docs/runbooks/bootstrap-state-backend.md.
 EOF
   exit 1
 fi
@@ -36,8 +38,8 @@ done
 cat <<'EOF'
 Bootstrap checklist (execute in order; stop on any failure):
 
-  [ ] 1. GCP project + KMS key rings created (staging and production SEPARATE)
-  [ ] 2. terraform/modules/state-bucket applied for staging
+  [ ] 1. GCP project(s) selected; TF_VAR_project_id supplied at runtime
+  [ ] 2. terraform/bootstrap applied for staging workspace
          (dedicated bucket, CMEK, versioning, uniform access, audit logs)
   [ ] 3. conftest policy gate passes against the bucket plan (require-cmek)
   [ ] 4. staging backend migrated:

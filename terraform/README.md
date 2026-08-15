@@ -12,13 +12,15 @@
 ## State bootstrap procedure (ADR-0003)
 
 State migration from local to GCS is a **Crit-class change** (two-person
-rule + change window). Ordered steps:
+rule + change window). Procedure of record:
+`../docs/runbooks/bootstrap-state-backend.md` with operator gates in
+`../STEP0_VERIFICATION.md`. Ordered summary:
 
-1. Run `modules/state-bucket/` (once it lands) for the **staging** bucket:
+1. Apply `bootstrap/` (workspace `staging`) — runs `modules/state-bucket/`:
    dedicated bucket, CMEK, versioning, uniform access, audit logging.
 2. Verify `policies/require-cmek.rego` passes against the bucket plan.
-3. In `environments/staging`: switch `backend "gcs"` and run
-   `terraform init -backend-config=../../backends/staging.backend.hcl -migrate-state`.
+3. In `environments/staging`: `terraform init
+   -backend-config=../../backends/staging.backend.hcl -migrate-state`.
 4. Repeat 1–3 for **production** with its own bucket + CMEK + service
    account. NEVER reuse the staging bucket or key.
 5. Import the migrated state into `backup/terraform-state/` procedure.
