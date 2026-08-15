@@ -45,8 +45,22 @@ jobs:
       - name: Validate
         working-directory: terraform/environments/${{ matrix.env }}
         run: terraform init -backend=false && terraform validate
+      - name: Validate bootstrap root (ADR-0003)
+        if: matrix.env == 'production'
+        working-directory: terraform/bootstrap
+        run: |
+          terraform init -backend=false
+          # The workspace guard refuses 'default' by design (ADR-0002
+          # isolation); validate under a real environment workspace.
+          terraform workspace new staging
+          terraform validate
       - name: Checkov
         run: pipx run checkov -d terraform/environments/${{ matrix.env }} --quiet
+      - name: Checkov (bootstrap + state-bucket module)
+        if: matrix.env == 'production'
+        run: |
+          pipx run checkov -d terraform/bootstrap --quiet
+          pipx run checkov -d terraform/modules/state-bucket --quiet
 
   plan:
     if: github.event_name == 'pull_request'
@@ -90,10 +104,31 @@ jobs:
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - uses: ./.github/actions/terraform-setup
+      - name: Select environment state SA
+        id: sa
+        run: |
+          case "${{ inputs.environment }}" in
+            staging)    echo "email=${{ vars.GCP_STATE_SA_STAGING }}" >> "$GITHUB_OUTPUT" ;;
+            production) echo "email=${{ vars.GCP_STATE_SA_PRODUCTION }}" >> "$GITHUB_OUTPUT" ;;
+          esac
+      - name: Authenticate to GCP (Workload Identity Federation)
+        if: vars.TF_REMOTE_STATE == 'true'
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3
+        with:
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ steps.sa.outputs.email }}
       - name: Apply
         working-directory: terraform/environments/${{ inputs.environment }}
         env:
           GITHUB_TOKEN: ${{ secrets.TF_GITHUB_TOKEN_WRITE }}
         run: |
-          terraform init
+          if [ "${{ vars.TF_REMOTE_STATE }}" = "true" ]; then
+            # Remote state (ADR-0003): WIF auth, impersonate the state SA —
+            # no SA JSON keys in CI (docs/workload-identity-federation.md).
+            terraform init -input=false \
+              -backend-config=../../backends/${{ inputs.environment }}.backend.hcl \
+              -backend-config="impersonate_service_account=${{ steps.sa.outputs.email }}"
+          else
+            terraform init
+          fi
           terraform apply -auto-approve -input=false
