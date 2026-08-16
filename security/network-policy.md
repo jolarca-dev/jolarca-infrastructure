@@ -44,19 +44,33 @@ Any additional metal↔GCP flow requires an update to this document and to
 | Egress    | Cloud NAT                | Allow-list third-party endpoints  |
 | Node IPs  | —                        | NEVER public (no-public-ips.rego) |
 
-## Matrix — payment boundary (ADR-0005; future workstream)
+## Matrix — payment boundary (ADR-0005; staging deployed STEP 21)
 
 Model A keeps jol-hub out of PCI scope: ONLY `payments_app` may reach
 Stripe, and the payment API is the single sanctioned cross-program flow
 (ADR-0004 Amendment 1). Unimplemented rows are the payment-boundary
 workstream's acceptance criteria (same rule as above).
 
-| Source                          | Destination                          | Port/proto | Purpose                                              |
-|---------------------------------|--------------------------------------|------------|------------------------------------------------------|
-| payments_app (CDE segment)      | api.stripe.com                       | 443/tcp    | the ONLY sanctioned Stripe egress (Cloud NAT allow-list) |
-| jol-hub workloads               | payment service internal endpoint    | 443/tcp    | payment API (mTLS; `docs/payment-api-contract.md`)   |
-| payments_app webhook forwarder  | jol-hub internal webhook endpoint    | 443/tcp    | signed per-product events (`X-Product: hub`)         |
-| jol-hub workloads               | api.stripe.com                       | —          | **DENIED by absence**: no allow row may ever be added without a new ADR (ADR-0005 E3) |
+| Source                          | Destination                          | Port/proto | Purpose | Status |
+|---------------------------------|--------------------------------------|------------|---------|--------|
+| payments_app (CDE segment)      | api.stripe.com                       | 443/tcp    | the ONLY sanctioned Stripe egress (Cloud NAT allow-list) | proven on staging plane (STEP 21 positive test); GKE row lands with cluster |
+| jol-hub workloads               | payment service internal endpoint    | 443/tcp    | payment API (mTLS; `docs/payment-api-contract.md`) — the N2 row, rendered fail-closed via `paymentsApi.cidr` (jol-hub helm/kustomize) | proven on staging plane (STEP 21 positive test) |
+| payments_app webhook forwarder  | jol-hub internal webhook endpoint    | 443/tcp    | signed per-product events (`X-Product: hub`) | app-level signing proven (STEP 20 contract suite); route lands with deployment |
+| jol-hub workloads               | api.stripe.com                       | —          | **DENIED by absence**: no allow row may ever be added without a new ADR (ADR-0005 E3) | **proven on staging plane** — credential-independent test: hub-plane workload WITH a syntactically valid Stripe test key got `gaierror: Temporary failure in name resolution` (denied below the auth layer, STEP 21) |
+
+### Drift alerting (payment-boundary policies)
+
+Any change to the payment-boundary rows above, to the jol-hub
+NetworkPolicy set, or to the Cloud NAT allow-list MUST trip review:
+
+- jol-hub: the vendored E1 guard + branch protection (required checks,
+  enforce_admins) block residue in-tree; NetworkPolicy manifest changes
+  are CODEOWNERS-gated infra paths.
+- this repo: `scripts/e3-network-deny-test.sh` is the re-runnable proof;
+  run it on every payment-boundary workstream PR and quarterly with the
+  scope reconfirmation (`pci-dss-scope.md`). Drift between the matrix
+  and deployed policies is treated as unexplained change = incident
+  (`isolation-model.md`).
 
 ## Enforcement mapping
 
