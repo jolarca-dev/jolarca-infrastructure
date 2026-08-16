@@ -44,6 +44,44 @@ commits follow Conventional Commits. Infra changes are auditable history
   non-marketplace fleet keys, `scripts/check-fleet-separation.sh` +
   `fleet-separation-guard.yml` weekly/on-change CI guard, `marketplace`
   topic marking on the five fleet repos.
+- STEP 10 payment boundary (operator-ratified Model A): ADR-0005 two
+  Django projects + single payment boundary (one Stripe integration in
+  the marketplace `payments_app`; jol-hub is a client of the boundary;
+  PCI scope = the boundary only; Model B rejection recorded), the
+  payment API integration contract (`docs/payment-api-contract.md`),
+  ADR-0004 Amendment 1 (the single sanctioned cross-program exception),
+  `scripts/check-payment-boundary.sh` guard (E1; shellcheck-clean,
+  negative-tested), payment-boundary egress matrix in
+  `security/network-policy.md` (E3), hub out-of-scope note in
+  `security/pci-dss-scope.md`, isolation-model boundary-1 note, and
+  `STEP10_PAYMENT_BOUNDARY.md` gate record. jol-hub fleet placement
+  documented (mission flagship, `/opt/jol/repos/`, mission-program IaC
+  custody — deliberately absent from the marketplace `github-org`
+  module). Architecture only; no payment code.
+- STEP 17 independent payment-boundary audit (`STEP17_AUDIT.md`):
+  per-control verdicts with reproduced evidence — hostile hub→Stripe
+  attempt blocked (no valid credential fleet-wide, no hub code path),
+  marketplace Stripe usage contained to payments_app; findings PB-01…
+  PB-06 (dormant Model-B residue in jol-hub), E1/E2 guards not yet
+  wired in hub CI, E3 not deployed, internal API unimplemented. SAQ-A
+  scope statement + archived evidence filed in jol-m-compliance;
+  residuals owned as RSK-006…RSK-011. Verdict: Model A NOT PROVEN yet.
+- STEP 22 payment-boundary re-audit (`STEP22_REAUDIT.md`): premise
+  "Steps 18–21 implemented" REJECTED — no step artifacts, no
+  remediation commits in any repo, no live boundary; every STEP-17
+  finding reproduces byte-identically (PB-01…PB-06, webhook 500-vs-400
+  defect, missing product attribution and /internal/v1); hostile attempt
+  still blocked by credential absence, not topology; only deltas: hub's
+  correct-but-undeployed default-deny NetworkPolicy manifests and 0 real
+  keys fleet-wide. New findings N1–N3; blockers B1–B8 owned; G3 NOT
+  cleared; scope statement and risk register deliberately unchanged
+  (certifying PROVEN now would be false attestation).
+- STEP 22B final re-audit attempt (`STEP22B_FINAL_REAUDIT.md`): STOPPED
+  at the premise gate — Steps 18–21 artifacts absent, no remediation
+  commits in any repo, no live boundary (test-db/redis only, no
+  cluster); drift spot-check byte-identical to STEP 22 (PB-01/02/05,
+  webhook defect, missing product field). Nothing attested, G3 still
+  BLOCKED, blockers B1–B8 unchanged; N3 evidence-custody gap persists.
 
 ### Changed
 

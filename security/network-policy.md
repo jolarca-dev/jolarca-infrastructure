@@ -44,6 +44,20 @@ Any additional metal↔GCP flow requires an update to this document and to
 | Egress    | Cloud NAT                | Allow-list third-party endpoints  |
 | Node IPs  | —                        | NEVER public (no-public-ips.rego) |
 
+## Matrix — payment boundary (ADR-0005; future workstream)
+
+Model A keeps jol-hub out of PCI scope: ONLY `payments_app` may reach
+Stripe, and the payment API is the single sanctioned cross-program flow
+(ADR-0004 Amendment 1). Unimplemented rows are the payment-boundary
+workstream's acceptance criteria (same rule as above).
+
+| Source                          | Destination                          | Port/proto | Purpose                                              |
+|---------------------------------|--------------------------------------|------------|------------------------------------------------------|
+| payments_app (CDE segment)      | api.stripe.com                       | 443/tcp    | the ONLY sanctioned Stripe egress (Cloud NAT allow-list) |
+| jol-hub workloads               | payment service internal endpoint    | 443/tcp    | payment API (mTLS; `docs/payment-api-contract.md`)   |
+| payments_app webhook forwarder  | jol-hub internal webhook endpoint    | 443/tcp    | signed per-product events (`X-Product: hub`)         |
+| jol-hub workloads               | api.stripe.com                       | —          | **DENIED by absence**: no allow row may ever be added without a new ADR (ADR-0005 E3) |
+
 ## Enforcement mapping
 
 | Plane      | Enforcement point                                  |

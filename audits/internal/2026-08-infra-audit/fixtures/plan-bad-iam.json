@@ -1,0 +1,20 @@
+{
+  "format_version": "1.2",
+  "resource_changes": [
+    {
+      "address": "google_project_iam_member.too_wide",
+      "type": "google_project_iam_member",
+      "change": {"actions": ["create"], "after": {"role": "roles/editor", "members": ["serviceAccount:app@p.iam.gserviceaccount.com"]}}
+    },
+    {
+      "address": "google_project_iam_binding.owner_binding",
+      "type": "google_project_iam_binding",
+      "change": {"actions": ["create"], "after": {"role": "roles/owner", "members": ["user:dev@example.com"]}}
+    },
+    {
+      "address": "google_service_account_iam_member.sa_user",
+      "type": "google_service_account_iam_member",
+      "change": {"actions": ["create"], "after": {"role": "roles/iam.serviceAccountUser", "members": ["serviceAccount:gke@p.iam.gserviceaccount.com"]}}
+    }
+  ]
+}
