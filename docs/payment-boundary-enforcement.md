@@ -32,12 +32,18 @@ because hub is MISSION custody — ADR-0004 R1/R3/R4 forbid this repo's
 
 | Context | Source workflow | Added |
 |---------|-----------------|-------|
-| `Backend - Unit & Integration Tests` | ci.yml | STEP 19 |
-| `payment-boundary-guard` | ci.yml (STEP 19) | STEP 19 |
-| `dependency-guard` | ci.yml (STEP 19) | STEP 19 |
+| `Payment Boundary Guard (E1, ADR-0005)` | payment-boundary-guard.yml | STEP 19 — ARMED |
+| `Dependency Guard (E2, ADR-0005)` | payment-boundary-guard.yml | STEP 19 — ARMED |
 
-Application evidence (date, API call, resulting protection state) is
-recorded in the STEP 19 execution file in jol-hub, not here.
+Applied 2026-08-17 via gh API (PATCH contexts; POST enforce_admins):
+`strict: true`, both contexts required, `enforce_admins: true` (admin
+bypass CLOSED), review count 0 (solo-era, marketplace precedent).
+Pre-existing red hub jobs (broken Django pin / frontend lint debt,
+OBS-18-3) are deliberately NOT required — broadening follows hub CI
+baseline repair. Evidence: STEP19_EXECUTED.md (jol-hub), incl. the
+blocked violation PR #80 on BOTH normal and admin merge paths.
+Application note: hub protection writes require PATCH/POST sub-resource
+calls with this token (PUT on the collection returns 404).
 
 ## Status ledger
 
@@ -46,4 +52,7 @@ recorded in the STEP 19 execution file in jol-hub, not here.
 | 2026-08-17 | ADR-0005 + contract codified (STEP 10 artifacts committed) |
 | 2026-08-17 | STEP 17 audit: NOT PROVEN (findings PB-01…PB-06) |
 | 2026-08-17 | STEP 22/22B re-audits: premise failed, blockers B1–B8 |
-| 2026-08-17 | STEP 18: hub residue purged (jol-hub PR #76); E1 record copy upgraded (layered scan, named exemptions) |
+| 2026-08-17 | STEP 18: hub residue purged (jol-hub PR #76, merged `89c4812d`); E1 record copy upgraded (layered scan, named exemptions) |
+| 2026-08-17 | STEP 19: E1/E2 wired as REQUIRED checks + enforce_admins=true; violation PR #80 blocked on both merge paths (jol-hub guards PR #77 merged `85d51489`; arming+evidence PR #81) |
+| 2026-08-17 | STEP 20: /internal/v1 live locally; contract suite 14/14 + 48/48 green; C4/C5/RSK-010 fixed (marketplace `4faef0a3`) |
+| 2026-08-17 | STEP 21: N2 row landed fail-closed (jol-hub `4f93c6b9`); E3 staging plane deployed + credential-independent deny proven (`scripts/e3-network-deny-test.sh`); drift alerting declared |

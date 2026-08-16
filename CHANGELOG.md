@@ -82,6 +82,14 @@ commits follow Conventional Commits. Infra changes are auditable history
   cluster); drift spot-check byte-identical to STEP 22 (PB-01/02/05,
   webhook defect, missing product field). Nothing attested, G3 still
   BLOCKED, blockers B1–B8 unchanged; N3 evidence-custody gap persists.
+- STEP 21 payment-boundary E3 staging (execution): N2 hub→payment-API
+  egress row merged fail-closed (jol-hub PR #82),
+  `scripts/e3-network-deny-test.sh` record copy (credential-independent
+  deny proven on the staging plane; positives green), network-policy
+  matrix status column + drift-alerting section,
+  `docs/payment-boundary-enforcement.md` ledger updated for steps
+  18–21, `STEP21_EXECUTED.md` + `EXECUTION_BUNDLE_18-21.md` evidence
+  bundle. Staging only; production human-gated.
 
 ### Changed
 
