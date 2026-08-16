@@ -18,6 +18,9 @@ variable "repositories" {
   # never appear here; mixing PCI-scoped marketplace state with mission
   # governance is a compliance boundary violation (and the CI fleet guard
   # scripts/check-fleet-separation.sh enforces the reverse direction).
+  # ADR-0005: jol-hub (mission-program flagship, payment-API consumer) is
+  # deliberately absent from this map — its creation/management belongs to
+  # mission-program IaC; mission resources must never enter this state.
   validation {
     condition     = alltrue([for name, _ in var.repositories : can(regex("^jol-m-[a-z0-9][a-z0-9-]{0,50}$", name))])
     error_message = "All fleet repositories must be named jol-m-* (ADR-0004 mission/marketplace separation)."

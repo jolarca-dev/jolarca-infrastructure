@@ -1,0 +1,25 @@
+{
+  "format_version": "1.2",
+  "resource_changes": [
+    {
+      "address": "github_repository.repos[\"jol-m-infrastructure\"]",
+      "type": "github_repository",
+      "change": {"actions": ["no-op"], "after": {"name": "jol-m-infrastructure", "visibility": "private"}}
+    },
+    {
+      "address": "google_storage_bucket.state",
+      "type": "google_storage_bucket",
+      "change": {"actions": ["create"], "after": {"name": "jolm-tfstate-production", "encryption": {"default_kms_key_name": "projects/p/locations/europe-west1/keyRings/tfstate/cryptoKeys/state-key"}}}
+    },
+    {
+      "address": "google_project_iam_member.ci_reader",
+      "type": "google_project_iam_member",
+      "change": {"actions": ["create"], "after": {"role": "roles/storage.objectViewer", "members": ["serviceAccount:ci@p.iam.gserviceaccount.com"]}}
+    },
+    {
+      "address": "google_compute_instance.internal",
+      "type": "google_compute_instance",
+      "change": {"actions": ["create"], "after": {"name": "internal", "access_config": null}}
+    }
+  ]
+}

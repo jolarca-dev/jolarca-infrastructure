@@ -93,3 +93,35 @@ GDPR Art. 5(1)(b)/Art. 32 (purpose limitation, security of processing);
 PCI-DSS scope isolation; SOC 2 CC6.1 (logical access), CC8.1 (change
 control — Terraform-only creation); ISO 27001 A.5.2/A.5.15 (governance
 of information security, access control).
+
+## Amendments
+
+### Amendment 1 — payment-boundary exception (2026-08-17, via ADR-0005)
+
+Ratified with ADR-0005 (Model A — single payment boundary). This is the
+ONE documented exception to the Two-Program Doctrine; all other rules
+stand unchanged.
+
+- **R4 gains a single documented exception.** Cross-program code
+  dependency between mission and marketplace remains FORBIDDEN, EXCEPT
+  the payment API: the designed shared boundary exposed by the
+  marketplace `payments_app` and consumed by `jol-hub`, with its own
+  security requirements (mTLS, HMAC-signed requests with replay TTL,
+  mandatory idempotency keys, service-account caller binding, PAN-free
+  payloads) defined in ADR-0005 and `docs/payment-api-contract.md`.
+  Governance documents may reference the boundary; shared code, state,
+  secrets, and CI remain forbidden. Adding any other cross-program
+  interface requires a new ADR.
+- **Hub prohibitions (enforced, not advisory).** jol-hub must NOT import
+  `stripe` (server-side), must NOT hold Stripe API keys, and must NEVER
+  see PAN data. Enforcement is structural: CI grep + dependency
+  allow-list guard in hub (ADR-0005 E1/E2) and network egress denial to
+  `api.stripe.com` (E3, `security/network-policy.md`). The only
+  sanctioned hub-side Stripe artifact is the browser-only Stripe.js
+  Elements include required by the SAQ-A donation flow.
+- **R1 clarification.** The mission program's flagship repository is
+  `jol-hub`; it complies with the mission prefix `jol-*` (without `m`).
+  It is created/managed by mission-program IaC (future mission infra
+  root under `/opt/jol/repos/`), NOT by this repo's `github-org` module
+  (mission resources must never enter marketplace Terraform state); the
+  fleet guard compares only the `jol-m-*` set and does not flag it.

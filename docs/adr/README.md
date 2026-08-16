@@ -10,3 +10,4 @@ line. Evidence copy goes to `jol-m-compliance`.
 | 0002 | State isolation design           | Accepted   |
 | 0003 | Encrypted remote state migration | Accepted   |
 | 0004 | Mission/marketplace separation   | Accepted   |
+| 0005 | Two Django projects + single payment boundary (Model A) | Accepted |

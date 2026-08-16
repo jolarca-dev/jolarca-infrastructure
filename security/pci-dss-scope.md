@@ -29,6 +29,11 @@ confirmation, quarterly).
 4. **Terraform state of payment segments** contains no CHD by design;
    still treated as connected-to-CDE for access control (read = need to
    know, logged).
+5. **Mission platform out of scope by construction (ADR-0005).** jol-hub
+   consumes the payment boundary as a client (`docs/payment-api-contract.md`):
+   no Stripe SDK server-side, no Stripe keys, no PAN, no network path to
+   `api.stripe.com`. Its exclusion from the CDE is re-verified with the
+   quarterly scope reconfirmation (E1–E3 controls).
 
 ## Obligations carried by THIS repository
 

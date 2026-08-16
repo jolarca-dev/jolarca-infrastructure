@@ -1,0 +1,15 @@
+{
+  "format_version": "1.2",
+  "resource_changes": [
+    {
+      "address": "google_compute_instance.exposed",
+      "type": "google_compute_instance",
+      "change": {"actions": ["create"], "after": {"name": "exposed", "access_config": [{"nat_ip": "34.32.1.1"}]}}
+    },
+    {
+      "address": "google_compute_address.ext",
+      "type": "google_compute_address",
+      "change": {"actions": ["create"], "after": {"name": "ext", "address_type": "EXTERNAL"}}
+    }
+  ]
+}

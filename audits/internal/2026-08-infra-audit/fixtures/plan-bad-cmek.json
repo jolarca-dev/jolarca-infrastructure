@@ -1,0 +1,15 @@
+{
+  "format_version": "1.2",
+  "resource_changes": [
+    {
+      "address": "google_storage_bucket.state",
+      "type": "google_storage_bucket",
+      "change": {"actions": ["create"], "after": {"name": "jolm-tfstate-production"}}
+    },
+    {
+      "address": "google_container_cluster.gke",
+      "type": "google_container_cluster",
+      "change": {"actions": ["create"], "after": {"name": "gke"}}
+    }
+  ]
+}
