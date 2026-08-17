@@ -90,6 +90,17 @@ commits follow Conventional Commits. Infra changes are auditable history
   `docs/payment-boundary-enforcement.md` ledger updated for steps
   18–21, `STEP21_EXECUTED.md` + `EXECUTION_BUNDLE_18-21.md` evidence
   bundle. Staging only; production human-gated.
+- STEP 22C final independent re-audit (`STEP22C_FINAL_REAUDIT.md`):
+  premise PASSED (all four merge SHAs + STEPn_EXECUTED.md committed);
+  every control reproduced with zero inherited claims — PB-01…06 clean,
+  fleet entropy scan 0 keys, fresh negative-test PR jol-hub #83 blocked
+  on normal AND admin merge paths (HTTP 405 rule violation), E3
+  credential-independent deny re-run green, contract suite 14/14 live.
+  Verdict: Model A PROVEN, hub out of PCI scope. G3 CONDITIONAL
+  CLEARANCE: payment-boundary controls cleared; first-real-donation
+  authorization withheld pending DPIA-003 signature, VIES VAT evidence,
+  Stripe TIA + AoC, RSK-013 (contract suite ungated in boundary-repo CI)
+  and RSK-014 (refund PSP wiring). Enforcement ledger updated.
 
 ### Changed
 
