@@ -28,6 +28,11 @@
 #     integration (crm models+migration+serializer, bitrix24 deal-source
 #     enum, entity-config method validator). Layer 1/2/3 markers still
 #     apply inside them — only quoted-label occurrences are exempt.
+#   - rule documents (RULEDOC ledger; jol-hub ADR-010, approved per
+#     O-017(3)/D-016): a governance rule must NAME the forbidden literals
+#     in the sentence that forbids them. ONLY the exact files listed in
+#     RULEDOC are exempt from layer-3 literal hits; layers 1/2 unchanged.
+#     Additions to RULEDOC require an ADR — no blanket doc exemption.
 #
 # This file is the RECORD COPY (jol-m-infrastructure); hub CI pins a copy
 # of it. Adding any other exception requires an ADR, not a code change.
@@ -49,6 +54,11 @@ VOCAB=(
   "backend/django/apps/crm/api/serializers.py"
   "backend/integrations/bitrix24/api/deals.py"
   "scripts/validate_entity_configs.py"
+)
+# Rule-document exemption ledger (ADR-010 in jol-hub; O-017(3)/D-016).
+# Named scope, exact paths only; adding an entry REQUIRES an ADR.
+RULEDOC=(
+  "QODER.md"
 )
 
 if [ ! -d "$ROOT" ]; then
@@ -75,22 +85,28 @@ scan() {
   done
 }
 
-vocab_excluded() {
-  # true (0) when the violating file is on the ledger-vocabulary list.
+ledger_excluded() {
+  # true (0) when every violating file sits on a named exemption ledger:
+  # VOCAB (business label vocabulary) or RULEDOC (rule documents, ADR-010).
   local f rel v
   while IFS= read -r f; do
     rel="${f%%:*}"; rel="${rel#"$ROOT"/}"
-    local is_vocab=1
+    local exempt=1
     for v in "${VOCAB[@]}"; do
-      [ "$rel" = "$v" ] && is_vocab=0 && break
+      [ "$rel" = "$v" ] && exempt=0 && break
     done
-    [ "$is_vocab" -eq 1 ] && return 1
+    if [ "$exempt" -eq 1 ]; then
+      for v in "${RULEDOC[@]}"; do
+        [ "$rel" = "$v" ] && exempt=0 && break
+      done
+    fi
+    [ "$exempt" -eq 1 ] && return 1
   done <<< "$1"
   return 0
 }
 
 scan_vocab_aware() {
-  # Like scan, but hits confined to VOCAB files are exempt (label strings).
+  # Like scan, but hits confined to named-ledger files are exempt.
   local label="$1"; shift
   local grep_args=()
   while [ "$1" != "--" ]; do grep_args+=("$1"); shift; done
@@ -99,7 +115,7 @@ scan_vocab_aware() {
   for p in "$@"; do
     if hits="$(grep -rIn "${grep_args[@]}" "${EXCLUDES[@]}" "${FIXTURES[@]}" \
                  -E "$p" "$ROOT" 2>/dev/null)"; then
-      if ! vocab_excluded "$hits"; then
+      if ! ledger_excluded "$hits"; then
         echo "VIOLATION [$label]: pattern '$p' found (ADR-0005 Model A):"
         printf '%s\n' "$hits" | sed 's/^/  /'
         status=1
@@ -127,7 +143,7 @@ scan "manifests" \
   '"stripe"' "'stripe'"
 
 # Layer 3 — the whole tree: key material and Stripe server endpoints are
-# forbidden anywhere (ledger-label occurrences exempted by list).
+# forbidden anywhere (named-ledger occurrences exempted by VOCAB/RULEDOC).
 scan_vocab_aware "full-tree" \
   -I -- \
   '\bsk_(live|test)_[A-Za-z0-9]{8,}' \
