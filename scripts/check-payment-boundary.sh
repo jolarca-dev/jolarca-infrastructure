@@ -16,6 +16,11 @@
 #      legitimate server-side Stripe endpoint. js.stripe.com (browser-only
 #      Elements include, SAQ-A) is the single sanctioned Stripe artifact
 #      in hub and is NOT matched.
+#   4. FRONTEND SCOPE (ts/tsx/js/jsx under frontend/apps + frontend/packages):
+#      PSP client-SDK imports and key envs are forbidden in hub source —
+#      checkout handoffs (redirect) are the ONLY sanctioned pattern
+#      (O-021 disposition; donation-flow-spec §1). Exemptions: VOCAB/RULEDOC
+#      ledgers only (ADR-010 discipline); no new exemption class.
 #
 # Exemption policy (each is a NAMED exemption; additions require an ADR):
 #   - dependency trees (venv/.venv/node_modules/...): pinned third-party
@@ -46,7 +51,7 @@ SELF="$(basename "${BASH_SOURCE[0]}")"
 EXCLUDES=(--exclude-dir=venv --exclude-dir=.venv --exclude-dir=node_modules
           --exclude-dir=.git --exclude-dir=.next --exclude-dir=__pycache__)
 FIXTURES=(--exclude=test_dependency_guard.py --exclude=test_compliance.py
-          --exclude="$SELF")
+          --exclude="$SELF" --exclude='*.tsbuildinfo' --exclude-dir=.next)
 # Ledger-vocabulary exemption list (relative to ROOT).
 VOCAB=(
   "backend/django/apps/crm/models.py"
@@ -151,6 +156,35 @@ scan_vocab_aware "full-tree" \
   '\bwhsec_[A-Za-z0-9]{8,}' \
   'STRIPE_SECRET' 'STRIPE_API_KEY' \
   'api\.stripe\.com' 'hooks\.stripe\.com'
+
+# Layer 4 — frontend source: PSP client-SDK imports + key envs are forbidden
+# in hub (Model A: checkout handoff is the only sanctioned pattern, O-021).
+# Scope limited to hub-owned frontend source trees; exemption ledgers apply.
+FRONTEND_DIRS=()
+[ -d "$ROOT/frontend/apps" ] && FRONTEND_DIRS+=("$ROOT/frontend/apps")
+[ -d "$ROOT/frontend/packages" ] && FRONTEND_DIRS+=("$ROOT/frontend/packages")
+if [ "${#FRONTEND_DIRS[@]}" -gt 0 ]; then
+  scan_frontend() {
+    local label="$1"; shift
+    local p hits
+    for p in "$@"; do
+      if hits="$(grep -rIn "${EXCLUDES[@]}" "${FIXTURES[@]}" \
+                   --include='*.ts' --include='*.tsx' --include='*.js' --include='*.jsx' \
+                   -E "$p" "${FRONTEND_DIRS[@]}" 2>/dev/null)"; then
+        if ! ledger_excluded "$hits"; then
+          echo "VIOLATION [$label]: pattern '$p' found (ADR-0005 Model A):"
+          printf '%s\n' "$hits" | sed 's/^/  /'
+          status=1
+        fi
+      fi
+    done
+  }
+  scan_frontend "frontend-psp" \
+    '@stripe/stripe-js' '@stripe/react-stripe-js' \
+    '\bloadStripe\(' 'NEXT_PUBLIC_STRIPE_' \
+    '@paypal/react-paypal-js' 'braintree-web' \
+    '@adyen/adyen-web' '@mollie/'
+fi
 
 if [ "$status" -eq 0 ]; then
   echo "PAYMENT BOUNDARY OK: no Stripe SDK, keys, or server endpoints in '$ROOT'."
