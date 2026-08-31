@@ -112,7 +112,7 @@ deferred for the same reason.
 
 - **N3 — evidence custody gap:** the Step-17 compliance artifacts (scope
   statement, archived report, register rows) were NEVER COMMITTED —
-  `git status` in jol-m-compliance still shows them as untracked/modified.
+  `git status` in jolarca-compliance still shows them as untracked/modified.
   "Immutable, hash-pinned" is currently false for the prior audit too.
   Nothing is gate evidence until merged through protected branches.
 
@@ -127,7 +127,7 @@ deferred for the same reason.
 | B5 | Fix webhook forgery → 400 (exception-class handling) | Marketplace | Step-17 defect |
 | B6 | Bring up the boundary (app containers/cluster) so C3/C4-live/C6 drills can execute | Marketplace/Infra | C3, C4, C6 |
 | B7 | Commit Step-17 + Step-22 evidence through protected branches (N3) | Compliance | evidence integrity |
-| B8 | Route donation VAT/receipt question to jol-m-legal + tax advisor (still open) | Compliance/Legal | RSK-011 |
+| B8 | Route donation VAT/receipt question to jolarca-legal + tax advisor (still open) | Compliance/Legal | RSK-011 |
 
 ## Loop closure — what this re-audit did NOT change, and why
 
@@ -138,7 +138,7 @@ deferred for the same reason.
   finding reproduces. No risk was closed because no control changed.
 - **G3 gate:** NOT CLEARED. Checklist items remain unchecked; the
   gate-evidence directory gains only this re-audit (archived under
-  `audits/internal/`, hash-pinned, in jol-m-compliance).
+  `audits/internal/`, hash-pinned, in jolarca-compliance).
 
 ## ONE-SENTENCE VERDICT
 

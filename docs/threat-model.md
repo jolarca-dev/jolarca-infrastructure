@@ -1,7 +1,7 @@
 # Threat model — infrastructure plane (STRIDE)
 
 Scope: the control plane described by this repository (state, pipelines,
-bridge, secrets), NOT application-level threats of jol-m-marketplace.
+bridge, secrets), NOT application-level threats of jolarca.
 Review cadence: annually + on any architecture ADR.
 
 ## Crown jewels (ranked)

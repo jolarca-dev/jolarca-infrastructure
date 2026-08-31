@@ -2,7 +2,7 @@
 # here and enforced by terraform — drift corrected on every apply.
 #trivy:ignore:GIT-0001 trivy:ignore:GIT-0003
 resource "github_repository" "repos" {
-  # checkov:skip=CKV_GIT_1: jol-m-marketplace is INTENTIONALLY public — it
+  # checkov:skip=CKV_GIT_1: jolarca is INTENTIONALLY public — it
   # is the open-source marketplace application (AGPL-3.0). The
   # infrastructure, compliance, legal, and data repos in this fleet are
   # private. Visibility is a deliberate per-repo policy decision.

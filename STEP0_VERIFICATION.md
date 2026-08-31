@@ -2,7 +2,7 @@
 
 Operator-facing checklist for the local → GCS state migration. Every
 apply is HUMAN-GATED: nothing below marked ⛔ runs without your explicit
-confirmation in the change record. Evidence copies go to `jol-m-compliance`
+confirmation in the change record. Evidence copies go to `jolarca-compliance`
 (SOC 2 CC8.1).
 
 Frozen identifiers:
@@ -107,7 +107,7 @@ CI: branch protection checks `ci` + `security` green on the PR.
 
 - [ ] WIF pool/provider + `ci_principal` binding (`docs/workload-identity-federation.md`).
 - [ ] **Phase B PR**: permanent `backend "gcs" {}` blocks + repo var `TF_REMOTE_STATE=true`; overlays deleted; CI green remote-native.
-- [ ] Fleet import (jol-m-compliance/legal/data/marketplace) into production state — the STEP after STEP 0.
+- [ ] Fleet import (jolarca-compliance/legal/data/marketplace) into production state — the STEP after STEP 0.
 - [ ] Key custodians recorded in `security/key-custody.md` (both KMS keys).
 - [ ] Backup layer (`backup/terraform-state/`) registered against the new buckets.
 - [ ] Solo-era two-person sign-off evidence when operator #2 onboards.

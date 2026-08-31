@@ -1,4 +1,4 @@
-# jol-m-infrastructure — The Marketplace Moat
+# jolarca-infrastructure — The Marketplace Moat
 
 **Private** infrastructure-as-code repository for the Journey of Life marketplace
 scope (`jol-m-*` repository fleet). Scope-segregated from church-platform
@@ -42,7 +42,7 @@ Terraform runs use `GITHUB_TOKEN` / `GH_TOKEN` from the operator environment
 | GDPR       | Art. 25 data protection by design; Art. 32 security of processing (DPIA template in `docs/`) |
 
 Evidence artifacts (access reviews, restore drills, change records) live in
-`jol-m-compliance`; this repository produces them, it does not store audit
+`jolarca-compliance`; this repository produces them, it does not store audit
 records containing personal data.
 
 ## Repository map

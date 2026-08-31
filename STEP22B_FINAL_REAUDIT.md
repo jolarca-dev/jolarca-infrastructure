@@ -13,7 +13,7 @@
 | Requirement | Check | Result |
 |-------------|-------|--------|
 | Steps 18–21 artifacts exist | `ls /opt/jol-m/repos/*/STEP* /opt/jol/repos/jol-hub/STEP*` | **MISSING** — only STEP0/10/17/22 exist anywhere in the fleet |
-| Steps 18–21 committed | `git log -8` in jol-hub, jol-m-marketplace, jol-m-compliance, jol-m-infrastructure | **MISSING** — zero payment-boundary remediation commits; heads are CODEOWNERS/governance (hub), CodeQL fix (marketplace), build-audit hygiene (compliance), CMEK ordering (infra) |
+| Steps 18–21 committed | `git log -8` in jol-hub, jolarca, jolarca-compliance, jolarca-infrastructure | **MISSING** — zero payment-boundary remediation commits; heads are CODEOWNERS/governance (hub), CodeQL fix (marketplace), build-audit hygiene (compliance), CMEK ordering (infra) |
 | Live boundary running | `docker ps`, `ss -ltn`, `kubectl` | **MISSING** — marketplace test-db/test-redis only; no application container/listener; `kubectl` → connection refused (no cluster). The :80/:443 listeners are a non-payment edge process; :30000 is the IDE's cef_server — neither is the boundary |
 
 ## Spot-check: drift state unchanged since STEP 22
@@ -32,7 +32,7 @@ hits); `PB-05` inverted test still asserts Stripe secrets must exist
   payment-boundary remediation, and uncommitted work is not evidence
   regardless.
 - N3 remains open: the STEP-17/22 compliance artifacts are STILL
-  untracked/uncommitted in jol-m-compliance — no audit evidence in this
+  untracked/uncommitted in jolarca-compliance — no audit evidence in this
   chain is immutable yet. Committing them through the protected branch
   is itself blocker B7.
 
@@ -55,4 +55,4 @@ guards + hub branch-protection required checks (N1), B3 implement
 with the payment-API egress row (N2) and re-run the hostile attempt
 against topology, B5 fix webhook 400-on-forgery, B6 bring the boundary
 up for the live drills, B7 commit the audit evidence (N3), B8 route
-donation VAT/receipt to jol-m-legal + tax advisor.**
+donation VAT/receipt to jolarca-legal + tax advisor.**

@@ -39,7 +39,7 @@
 #     RULEDOC are exempt from layer-3 literal hits; layers 1/2 unchanged.
 #     Additions to RULEDOC require an ADR — no blanket doc exemption.
 #
-# This file is the RECORD COPY (jol-m-infrastructure); hub CI pins a copy
+# This file is the RECORD COPY (jolarca-infrastructure); hub CI pins a copy
 # of it. Adding any other exception requires an ADR, not a code change.
 #
 # Usage: scripts/check-payment-boundary.sh [ROOT]

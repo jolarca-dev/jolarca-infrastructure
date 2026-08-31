@@ -93,7 +93,7 @@ bash scripts/check-payment-boundary.sh <violating-tree>  # exit 1: SDK import, s
   only the org's `jol-m-*` set and is unaffected (verified by design:
   `scripts/check-fleet-separation.sh` greps `^jol-m-`).
 
-## A5 — Risk-register + RoPA follow-ups (file in `jol-m-compliance/risk-register`)
+## A5 — Risk-register + RoPA follow-ups (file in `jolarca-compliance/risk-register`)
 
 1. Single payment boundary registered as a designed compensating-control
    set (E1–E3 + contract §4); quarterly review with PCI scope

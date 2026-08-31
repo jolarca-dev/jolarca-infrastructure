@@ -35,8 +35,8 @@ technical, and monitored.
 - **R1 — Prefix covenant.** Marketplace repositories are `jol-m-*` and
   NOTHING else; mission repositories are `jol-*` (without `m`). No other
   prefix joins either fleet. The marketplace fleet is exactly:
-  `jol-m-marketplace`, `jol-m-infrastructure`, `jol-m-compliance`,
-  `jol-m-legal`, `jol-m-data`.
+  `jolarca`, `jolarca-infrastructure`, `jolarca-compliance`,
+  `jolarca-legal`, `jolarca-data`.
 - **R2 — Terraform is the only creator.** Marketplace repos are created
   ONLY via `terraform/modules/github-org`. Out-of-band creation is an
   incident: import into state within 48h or delete the repo.
@@ -55,7 +55,7 @@ technical, and monitored.
   window; agent memory/instructions must not span both projects.
 - **R6 — Metadata marking.** Marketplace repos carry the `marketplace`
   topic; visibility/license policy lives in the fleet map
-  (`jol-m-marketplace` public+AGPL-3.0 by doctrine, all others private).
+  (`jolarca` public+AGPL-3.0 by doctrine, all others private).
 - **R7 — Split triggers.** The shared org is re-evaluated — migrating
   marketplace to its own org — upon ANY of: a second operator joins;
   marketplace gains external contributors; PCI scope expands beyond the

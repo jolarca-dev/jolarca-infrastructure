@@ -18,11 +18,11 @@
 |---|---|---|
 | Step 18 merged | `git log` jol-hub: `89c4812d … (#76)` | present |
 | Step 19 merged | `85d51489 (#77)`, `07eed1ce (#81)`, revert pair `ba2f7c63 (#79)` / `b9b3d0a0 (#78)` | present |
-| Step 20 merged | `git log` jol-m-marketplace origin/main: `4faef0a3 … (#18)` | present |
-| Step 21 merged | jol-hub `4f93c6b9 (#82)`; jol-m-infrastructure `90d589a (#10)` | present |
+| Step 20 merged | `git log` jolarca origin/main: `4faef0a3 … (#18)` | present |
+| Step 21 merged | jol-hub `4f93c6b9 (#82)`; jolarca-infrastructure `90d589a (#10)` | present |
 | STEP18/19_EXECUTED.md committed | `git ls-files --error-unmatch` in jol-hub | COMMITTED |
-| STEP20_EXECUTED.md committed | `git ls-tree origin/main` in jol-m-marketplace | COMMITTED |
-| STEP21_EXECUTED.md + EXECUTION_BUNDLE_18-21.md committed | `git ls-files` in jol-m-infrastructure | COMMITTED |
+| STEP20_EXECUTED.md committed | `git ls-tree origin/main` in jolarca | COMMITTED |
+| STEP21_EXECUTED.md + EXECUTION_BUNDLE_18-21.md committed | `git ls-files` in jolarca-infrastructure | COMMITTED |
 
 One sync anomaly found and resolved: the local marketplace checkout was
 one commit behind origin/main (`67d91cd`); `STEP20_EXECUTED.md` WAS
@@ -30,7 +30,7 @@ committed on origin/main (`4faef0a3`). Premise failure avoided by
 checking the remote, not just the local worktree. N3 lesson applied.
 
 Residual premise defect (recorded, not premise-breaking): the STEP 17/22
-audit artifacts in **jol-m-compliance** were still untracked working-tree
+audit artifacts in **jolarca-compliance** were still untracked working-tree
 files. This re-audit commits them (see loop closure).
 
 ---
@@ -180,7 +180,7 @@ Marketplace, due at live PSP wiring.
 
 ## NEW FINDINGS (this re-audit)
 
-1. **RSK-013 (HIGH, new): the boundary repo is unguarded.** jol-m-marketplace
+1. **RSK-013 (HIGH, new): the boundary repo is unguarded.** jolarca
    main has `required_status_checks: null`, and its CI does not run
    `tests/contract` at all (compose default command targets
    `tests/integration`, which contains only `__init__.py` → pytest exit 5
@@ -212,7 +212,7 @@ Marketplace, due at live PSP wiring.
 
 ---
 
-## LOOP CLOSURE (performed by this re-audit, in jol-m-compliance)
+## LOOP CLOSURE (performed by this re-audit, in jolarca-compliance)
 
 1. **PCI scope statement** → upgraded CONDITIONAL → **PROVEN**
    (`certifications/pci-dss/scope-statement-model-a.md`), evidence-linked.

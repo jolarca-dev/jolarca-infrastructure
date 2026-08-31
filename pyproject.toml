@@ -6,7 +6,7 @@
 # (.ansible-lint / .yamllint) when the ansible workstream lands.
 
 [project]
-name = "jol-m-infrastructure-tooling"
+name = "jolarca-infrastructure-tooling"
 version = "0.1.0"
 description = "Operator tooling pins for lint/pre-commit harnesses (no runtime code)."
 requires-python = ">=3.11"

@@ -1,7 +1,7 @@
 # ADR-0003: Encrypted remote state migration (local → GCS)
 
 - **Status:** Accepted (STEP 0 directive, 2026-08-15) — implementation in
-  progress; two-person sign-off evidence is recorded in `jol-m-compliance`
+  progress; two-person sign-off evidence is recorded in `jolarca-compliance`
   when the second operator onboards (solo-era deviation, see ADR-0001
   lineage in `security/key-custody.md`)
 - **Date:** 2026-08-14 (proposed) → 2026-08-15 (accepted)
@@ -96,7 +96,7 @@ Rollback = revert to local backend; rehearse in staging first:
 3. Treat the migrated copy in GCS as retained evidence (versioning keeps
    it); do NOT delete the bucket (prevent_destroy will refuse anyway).
 4. Rollback is itself a Crit-class change: change record + reason in
-   `jol-m-compliance`, and reopen this ADR with a Superseded-by pointer.
+   `jolarca-compliance`, and reopen this ADR with a Superseded-by pointer.
 
 ## Compliance mapping
 

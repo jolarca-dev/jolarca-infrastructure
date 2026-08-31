@@ -21,8 +21,8 @@ repo as `jol-infrastructure`. Execute atomically in one change record:
    alternative — record the decision as a new ADR before touching anything.
 2. Rename the GitHub repository (Settings → General → Rename). GitHub redirects clone URLs.
 3. Update the Terraform fleet map `terraform/modules/github-org/variables.tf:15-37`:
-   `jol-m-marketplace → jol-marketplace`, `jol-m-infrastructure → jol-infrastructure`,
-   `jol-m-compliance → jol-compliance`, `jol-m-legal → jol-legal`, `jol-m-data → jol-data`
+   `jolarca → jol-marketplace`, `jolarca-infrastructure → jol-infrastructure`,
+   `jolarca-compliance → jol-compliance`, `jolarca-legal → jol-legal`, `jolarca-data → jol-data`
    (rename is destructive for the resource key — plan first, expect destroy/create unless
    `moved` blocks are added; use `terraform state mv` discipline per CONTRIBUTING.md).
 4. Sweep the 19 tracked files containing `jol-m-` (README.md, LICENSE, Makefile,

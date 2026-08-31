@@ -1,4 +1,4 @@
-# jol-m-infrastructure — operator hygiene targets.
+# jolarca-infrastructure — operator hygiene targets.
 # Targets degrade gracefully while workstreams (ansible, k8s) are pending.
 
 SHELL := /bin/bash

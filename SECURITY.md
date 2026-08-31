@@ -1,4 +1,4 @@
-# Security Policy — jol-m-infrastructure
+# Security Policy — jolarca-infrastructure
 
 ## Scope
 
@@ -10,7 +10,7 @@ this repository describes.
 ## Reporting
 
 **NEVER open issues about infrastructure vulnerabilities in public
-repositories** (including `jol-m-marketplace`). Infrastructure findings
+repositories** (including `jolarca`). Infrastructure findings
 stay inside the moat.
 
 | Channel                    | Use for                                          |

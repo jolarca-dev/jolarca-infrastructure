@@ -7,18 +7,18 @@
   contract/webhook/degraded-mode regression; PCI scope statement; residuals.
 - **Method:** every verdict below carries the command or file evidence that
   produced it. Nothing is taken from prior step documents without
-  re-verification. Repos inspected: `jol-m-marketplace`, `jol-hub`
-  (`/opt/jol/repos/`), `jol-m-compliance`, `jol-m-infrastructure`.
+  re-verification. Repos inspected: `jolarca`, `jol-hub`
+  (`/opt/jol/repos/`), `jolarca-compliance`, `jolarca-infrastructure`.
 
 ## Evidence baseline (what actually exists)
 
-- `jol-m-marketplace/backend/apps/payments_app/` exists (services, webhooks,
+- `jolarca/backend/apps/payments_app/` exists (services, webhooks,
   tasks, models) — Stripe SDK usage present.
 - `jol-hub` exists at `/opt/jol/repos/jol-hub` with Django backend,
   donations app, frontend donation widgets, and `infra/` (tf/k8s/helm).
 - NO deployed runtime anywhere: dev is docker-compose only. No live
   `/internal/v1` endpoint, no cluster, no E3 network control in force.
-- `jol-m-compliance`: G3-payments gate evidence checklist is fully
+- `jolarca-compliance`: G3-payments gate evidence checklist is fully
   UNCHECKED (`audits/gate-evidence/G3-payments/README.md`); Steps 13–16
   reports DO NOT EXIST in any fleet repo (verified by file search).
 
@@ -31,7 +31,7 @@
 Marketplace containment (Stripe usage outside payments_app):
 
 ```bash
-grep -rIl -E '\bstripe\b' jol-m-marketplace/backend | grep -v payments_app
+grep -rIl -E '\bstripe\b' jolarca/backend | grep -v payments_app
 # → ONLY dependency manifests (pyproject.toml, requirements/*.txt)
 ```
 
@@ -74,7 +74,7 @@ grep -nE 'payment|stripe|boundary' jol-hub/.github/workflows/{ci,compliance-chec
 ```
 
 `scripts/check-payment-boundary.sh` exists only as the record copy in
-`jol-m-infrastructure`; hub CI (now existing) never picked it up. E2's
+`jolarca-infrastructure`; hub CI (now existing) never picked it up. E2's
 dependency-guard test likewise absent (no guard test found in hub). The
 findings PB-01–PB-06 above are the direct consequence: **without the guard in
 CI, residue accumulates silently — exactly what it did.**
@@ -178,7 +178,7 @@ and live replay drill missing.**
 amount, currency, status, refunded_amount. **No `product` field.**
 `create_payment_intent` metadata = `{order_id, order_number}` only.
 No hub intents exist; no finance-mart contract artifact found in
-`jol-m-data`. Hub-donation vs marketplace-order separation is currently
+`jolarca-data`. Hub-donation vs marketplace-order separation is currently
 trivial (hub side = zero transactions) but NOT by the contracted design.
 
 **C5 verdict: FAIL — attribution schema must be built per contract §5
@@ -199,12 +199,12 @@ exists** (registered).
 
 ## C7 — PCI scope statement — ISSUED (this step)
 
-Filed to `jol-m-compliance/certifications/pci-dss/scope-statement-model-a.md`
+Filed to `jolarca-compliance/certifications/pci-dss/scope-statement-model-a.md`
 and archived with this report under
-`jol-m-compliance/audits/internal/2026-08-step17-payment-boundary-audit/`.
+`jolarca-compliance/audits/internal/2026-08-step17-payment-boundary-audit/`.
 Statement:
 
-> SAQ-A scope = the payment boundary (`jol-m-marketplace`
+> SAQ-A scope = the payment boundary (`jolarca`
 > `payments_app`, its data stores and network segment) ONLY. jol-hub is
 > OUT of scope per Model A (ADR-0005, ADR-0004 Amendment 1): no Stripe
 > SDK server-side, no Stripe keys, no PAN, no `api.stripe.com` path.
@@ -220,7 +220,7 @@ report is the first gate evidence filed under G3.
 
 ---
 
-## C8 — Residual risks (filed in jol-m-compliance/risk-register/register.md)
+## C8 — Residual risks (filed in jolarca-compliance/risk-register/register.md)
 
 | ID | Residual | Owner |
 |----|----------|-------|
@@ -229,7 +229,7 @@ report is the first gate evidence filed under G3.
 | RSK-008 | E3 network control not deployed; hostile-attempt defense rests on credential absence | Infra |
 | RSK-009 | Internal payment API unimplemented: donation flow dead-ended; pressure risk to re-integrate directly | Marketplace |
 | RSK-010 | Refund edge cases: hub refund view flips DB status only — no money movement via boundary; partial/duplicate-refund paths undefined | Marketplace |
-| RSK-011 | Donation VAT/receipt handling unresolved (receipt endpoints exist as stubs) — routed to jol-m-legal + tax advisor; recurring donations undesigned against contract | Compliance/Legal |
+| RSK-011 | Donation VAT/receipt handling unresolved (receipt endpoints exist as stubs) — routed to jolarca-legal + tax advisor; recurring donations undesigned against contract | Compliance/Legal |
 | (defect) | Webhook forgery → HTTP 500 instead of 400 (exception-class mismatch) | Marketplace |
 
 ---

@@ -1,7 +1,7 @@
 # PCI-DSS scope — cardholder data environment (CDE) segmentation
 
 **Applies to:** marketplace payments + KYC/AML workloads declared in
-`jol-m-marketplace`. PCI-DSS v4.0; this document defines what is IN scope
+`jolarca`. PCI-DSS v4.0; this document defines what is IN scope
 so everything else can be provably OUT of scope (Req. 12.5.2 scope
 confirmation, quarterly).
 
@@ -49,4 +49,4 @@ confirmation, quarterly).
 ## Quarterly scope reconfirmation
 
 Recorded in `access-review.md`: verify no new system became
-connected-to-CDE since last review. Evidence goes to `jol-m-compliance`.
+connected-to-CDE since last review. Evidence goes to `jolarca-compliance`.

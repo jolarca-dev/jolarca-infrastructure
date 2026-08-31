@@ -1,6 +1,6 @@
 # STEP 21 — EXECUTED: E3 staging deployment + N2 row + credential-independent deny proof (B4/B6 partial, N2)
 
-- **Date:** 2026-08-17 · **Repo:** jol-m-infrastructure (+ jol-hub N2 PR) · **Branch:** `step-21-e3-deployment`
+- **Date:** 2026-08-17 · **Repo:** jolarca-infrastructure (+ jol-hub N2 PR) · **Branch:** `step-21-e3-deployment`
 - **Risk class:** High (network / PCI scope) · **Production: HUMAN-GATED — nothing in this step touches production.**
 - **Sequence role:** fourth of 18 → 19 → 20 → 21; steps 18–20 merged (`89c4812d`, `85d51489`, `4faef0a3`).
 - **NOT a verdict.** Independent re-audit (Step 22b) judges PROVEN/NOT-PROVEN.

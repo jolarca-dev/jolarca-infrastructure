@@ -16,7 +16,7 @@
 ### RSK-013 — NOT CLOSED
 
 Requirement: contract suite (`tests/contract`) wired into
-jol-m-marketplace CI as a REQUIRED, merge-blocking check.
+jolarca CI as a REQUIRED, merge-blocking check.
 
 | Check | Evidence (this session) | Result |
 |---|---|---|
@@ -38,8 +38,8 @@ refund-money-moves test.
 ### Fleet sweep
 
 No `STEP23*`/`STEP24*` files and no STEP 23/24 commits exist in any of
-the four fleet repos (jol-hub, jol-m-marketplace, jol-m-infrastructure,
-jol-m-compliance). This is the same phantom-premise pattern that stopped
+the four fleet repos (jol-hub, jolarca, jolarca-infrastructure,
+jolarca-compliance). This is the same phantom-premise pattern that stopped
 STEP 22 and STEP 22b: downstream work was sequenced on steps that never
 happened.
 
@@ -58,7 +58,7 @@ Per the gate instruction, the following were **deliberately NOT done**:
 ## Blockers (exact)
 
 - **B25-1:** Step 23 (RSK-013) never executed — engineering work: wire
-  `tests/contract` into jol-m-marketplace CI (fix the pre-existing red
+  `tests/contract` into jolarca CI (fix the pre-existing red
   pipeline, GDAL install + empty `tests/integration` default command,
   along the way) and set it REQUIRED on main via branch protection.
   Owner: Marketplace/Platform.

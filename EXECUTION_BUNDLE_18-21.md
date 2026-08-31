@@ -40,7 +40,7 @@ started: #76 → #77/#81 → #18 → #82/this PR.
 
 ## STEP 20 — /internal/v1 live locally + contract green (B3, C4, C5, RSK-010)
 
-- Repo: jol-m-marketplace · PR #18 · merge commit `4faef0a3`
+- Repo: jolarca · PR #18 · merge commit `4faef0a3`
 - Endpoints: POST/GET payment-intents, POST refunds — HMAC auth (60 s
   TTL), caller↔product binding, idempotency (replay/409), scoped 404,
   whitelist PAN-free serialization, 503 degraded mode.
@@ -53,7 +53,7 @@ started: #76 → #77/#81 → #18 → #82/this PR.
   local compose stack (Postgres/Redis); live HTTP demo recorded.
 - Honest deviation noted in the evidence file: suite+implementation
   landed in one commit; first run caught 9 implementation defects.
-- Evidence file: `jol-m-marketplace/STEP20_EXECUTED.md` (committed).
+- Evidence file: `jolarca/STEP20_EXECUTED.md` (committed).
 - Observation OBS-20-1: marketplace CI gitleaks/docker-scan jobs red on
   the PR (non-required checks); local pre-commit gitleaks clean with
   documented `gitleaks:allow` test-key tags. Follow-up: marketplace CI
@@ -61,7 +61,7 @@ started: #76 → #77/#81 → #18 → #82/this PR.
 
 ## STEP 21 — E3 staging + N2 + credential-independent deny (B4 staging, N2)
 
-- Repo: jol-m-infrastructure (+ jol-hub N2 PR #82 merged `4f93c6b9`)
+- Repo: jolarca-infrastructure (+ jol-hub N2 PR #82 merged `4f93c6b9`)
 - N2 FIRST: hub→payment-API egress row, fail-closed via
   `paymentsApi.cidr` (helm) / documented substitute (kustomize). The E1
   guard flagged this PR's own prose (endpoint literal) before reword —
@@ -96,7 +96,7 @@ started: #76 → #77/#81 → #18 → #82/this PR.
    staging-plane proofs stand in until then).
 4. Hub donation-flow client wiring against /internal/v1 (B3 consumer
    side) + recurring-donation contract amendment.
-5. Donation VAT/receipt routing confirmation with jol-m-legal + tax
+5. Donation VAT/receipt routing confirmation with jolarca-legal + tax
    advisor (B8).
 6. Compliance repo updates (scope statement PROVEN-conditional wording,
    risk closures) are the RE-AUDIT's loop-closure inputs — executor does

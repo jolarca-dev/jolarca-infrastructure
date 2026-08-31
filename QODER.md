@@ -67,7 +67,7 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 
 ---
 
-## Project-Specific Guidelines — jol-m-infrastructure
+## Project-Specific Guidelines — jolarca-infrastructure
 
 This repository changes production infrastructure; every merge is a
 change-management record (SOC 2 CC8.1, ISO 27001 A.8.32). The full rules live

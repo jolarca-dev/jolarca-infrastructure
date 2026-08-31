@@ -22,8 +22,8 @@ variable "repositories" {
   # deliberately absent from this map — its creation/management belongs to
   # mission-program IaC; mission resources must never enter this state.
   validation {
-    condition     = alltrue([for name, _ in var.repositories : can(regex("^jolarca(-[a-z0-9-]+)?$", name))])
-    error_message = "All fleet repositories must be named jolarca or jolarca-<suffix> (ADR-0004 mission/marketplace separation)."
+    condition     = alltrue([for name, _ in var.repositories : can(regex("^jol-m-[a-z0-9][a-z0-9-]{0,50}$", name))])
+    error_message = "All fleet repositories must be named jol-m-* (ADR-0004 mission/marketplace separation)."
   }
 
   default = {

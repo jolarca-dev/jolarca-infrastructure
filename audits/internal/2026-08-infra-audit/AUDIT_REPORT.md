@@ -2,7 +2,7 @@
 
 - **Audit ID:** 2026-08-infra-audit
 - **Date:** 2026-08-15
-- **Object:** repository `jol-m-infrastructure` ("The Moat"), commit `0a9ae42` (origin/main), audited on branch `audit/2026-08-infra`
+- **Object:** repository `jolarca-infrastructure` ("The Moat"), commit `0a9ae42` (origin/main), audited on branch `audit/2026-08-infra`
 - **Audit team:** Principal Infrastructure Auditor / Senior Security Engineer / ISMS Auditor (independent; did not build this repo)
 - **Method:** every claim re-verified by command, test, or file read. Green self-reported tests were re-run, not trusted.
 
@@ -205,7 +205,7 @@ Handles follow consistent org-team naming and are **not literal placeholders** �
 
 ### G.2 Cross-repo naming
 
-`grep -RIl "jol-m-"` hits 19 tracked files (README, LICENSE, Makefile, pyproject.toml, CHANGELOG, CONTRIBUTING, SECURITY.md, security/*, docs/adr/README.md, threat-model, state-compromise runbook, `terraform/modules/github-org/{variables,main}.tf`, terraform/README). The fleet map itself (`variables.tf:15-37`) hard-codes `jol-m-marketplace/compliance/legal/data/infrastructure`. Canonical doctrine requires `jol-marketplace` / `jol-compliance` / `jol-legal`, and this repo renamed to `jol-infrastructure`. Note the collision flagged by the module's own comment: church-platform infra is already called `jol-infrastructure` (`versions.tf:4-6`) — the rename runbook must resolve that namespace collision first. F-09 includes the rename runbook (see `PRE_PUSH_CHECKLIST.md` step 1).
+`grep -RIl "jol-m-"` hits 19 tracked files (README, LICENSE, Makefile, pyproject.toml, CHANGELOG, CONTRIBUTING, SECURITY.md, security/*, docs/adr/README.md, threat-model, state-compromise runbook, `terraform/modules/github-org/{variables,main}.tf`, terraform/README). The fleet map itself (`variables.tf:15-37`) hard-codes `jolarca/compliance/legal/data/infrastructure`. Canonical doctrine requires `jol-marketplace` / `jol-compliance` / `jol-legal`, and this repo renamed to `jol-infrastructure`. Note the collision flagged by the module's own comment: church-platform infra is already called `jol-infrastructure` (`versions.tf:4-6`) — the rename runbook must resolve that namespace collision first. F-09 includes the rename runbook (see `PRE_PUSH_CHECKLIST.md` step 1).
 
 ### G.3 Runbooks & DR targets
 

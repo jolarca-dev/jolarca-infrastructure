@@ -1,4 +1,4 @@
-# Contributing — jol-m-infrastructure
+# Contributing — jolarca-infrastructure
 
 Operators only. This repository changes production infrastructure; every
 merge is a change-management record (SOC 2 CC8.1, ISO 27001 A.8.32).

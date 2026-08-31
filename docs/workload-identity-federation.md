@@ -16,11 +16,11 @@ calls GCP until this lands.
 P=<PROJECT_ID>; POOL=github-actions; PROVIDER=jolm-infra
 
 gcloud iam workload-identity-pools create "$POOL" \
-  --location=global --display-name="GitHub Actions (jol-m-infrastructure)"
+  --location=global --display-name="GitHub Actions (jolarca-infrastructure)"
 
 gcloud iam workload-identity-pools providers create-oidc "$PROVIDER" \
   --location=global --workload-identity-pool="$POOL" \
-  --display-name="jol-m-infrastructure repo" \
+  --display-name="jolarca-infrastructure repo" \
   --issuer-uri="https://token.actions.githubusercontent.com" \
   --attribute-mapping="google.subject=assertion.sub,attribute.repository=assertion.repository,attribute.ref=assertion.ref,attribute.actor=assertion.actor"
 ```
@@ -31,7 +31,7 @@ Never bind the whole issuer. The condition pins repository — and for
 apply-grade access, the ref:
 
 ```
-attribute.repository == "journeyoflife-org/jol-m-infrastructure"
+attribute.repository == "journeyoflife-org/jolarca-infrastructure"
 ```
 
 For production state access, additionally restrict on the principal-set
@@ -44,7 +44,7 @@ The state-bucket module owns this binding via `ci_principal` — re-run the
 bootstrap root with the variable once the pool exists:
 
 ```
-principalSet://iam.googleapis.com/projects/<PROJECT_NUMBER>/locations/global/workloadIdentityPools/github-actions/attribute.repository/journeyoflife-org/jol-m-infrastructure
+principalSet://iam.googleapis.com/projects/<PROJECT_NUMBER>/locations/global/workloadIdentityPools/github-actions/attribute.repository/journeyoflife-org/jolarca-infrastructure
 ```
 
 That grants `roles/iam.serviceAccountTokenCreator` on

@@ -1,4 +1,4 @@
-# Changelog — jol-m-infrastructure
+# Changelog — jolarca-infrastructure
 
 All notable changes to this infrastructure repository are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
@@ -64,7 +64,7 @@ commits follow Conventional Commits. Infra changes are auditable history
   marketplace Stripe usage contained to payments_app; findings PB-01…
   PB-06 (dormant Model-B residue in jol-hub), E1/E2 guards not yet
   wired in hub CI, E3 not deployed, internal API unimplemented. SAQ-A
-  scope statement + archived evidence filed in jol-m-compliance;
+  scope statement + archived evidence filed in jolarca-compliance;
   residuals owned as RSK-006…RSK-011. Verdict: Model A NOT PROVEN yet.
 - STEP 22 payment-boundary re-audit (`STEP22_REAUDIT.md`): premise
   "Steps 18–21 implemented" REJECTED — no step artifacts, no
@@ -106,7 +106,7 @@ commits follow Conventional Commits. Infra changes are auditable history
 
 - Renamed `terraform/environments/prod/` to `terraform/environments/production/`
   for consistent environment naming before remote-state migration.
-- Imported the out-of-band-created `jol-m-infrastructure` repository into
+- Imported the out-of-band-created `jolarca-infrastructure` repository into
   production Terraform state (`github_repository` +
   `github_repository_vulnerability_alerts`); pending reconciliation:
   merge-method policy, delete-branch-on-merge, Dependabot alerts enablement.

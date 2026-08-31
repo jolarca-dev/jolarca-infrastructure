@@ -13,7 +13,7 @@ Two separate Django projects live in one org:
 | Project | Product | Repo / local tree | Compliance posture |
 |---|---|---|---|
 | jol-hub | Roman Catholic digital mission platform (mission-program flagship) | `jol-hub`, `/opt/jol/repos/` | GDPR (religious-context processing); NO card scope |
-| jol-m-marketplace | Baltic B2C/B2B2C marketplace | `jol-m-marketplace`, `/opt/jol-m/repos/` | PCI-DSS (Stripe), GDPR, KYC/AML, VAT OSS |
+| jolarca | Baltic B2C/B2B2C marketplace | `jolarca`, `/opt/jol-m/repos/` | PCI-DSS (Stripe), GDPR, KYC/AML, VAT OSS |
 
 Both products take card payments: marketplace orders and hub donations.
 Two integration models were considered:
@@ -113,7 +113,7 @@ defeats Model A's core benefit: hub outside PCI scope. Rejected.
 
 ## Risk-register + RoPA notes
 
-Custody: the risk register lives ONLY in `jol-m-compliance/risk-register`
+Custody: the risk register lives ONLY in `jolarca-compliance/risk-register`
 (single-source-of-truth custody decision); entries below are filed there,
 not duplicated here.
 

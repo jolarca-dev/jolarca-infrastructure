@@ -1,6 +1,6 @@
 # GATE 0 — State Migration Pre-Flight Report (CHG-2026-08)
 
-- **Date:** 2026-08-15 (UTC) · **Change record:** [jol-m-compliance#3](https://github.com/journeyoflife-org/jol-m-compliance/issues/3)
+- **Date:** 2026-08-15 (UTC) · **Change record:** [jolarca-compliance#3](https://github.com/journeyoflife-org/jolarca-compliance/issues/3)
 - **Doctrine:** ADR-0003 (accepted), `docs/runbooks/bootstrap-state-backend.md`, `STEP0_VERIFICATION.md`
 - **Scope discipline:** verification + documentation only. **Zero terraform mutations performed; zero secrets printed.**
 

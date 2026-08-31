@@ -40,7 +40,7 @@ Break-glass (incident only, e.g. CI down during a live incident):
    concur; record both names + timestamp).
 3. Perform the minimal manual operation; export a full plan before/after.
 4. Within 24h: rotate the break-glass key, file the event in
-   `jol-m-compliance`, and reconcile drift (`../scripts/check-drift.sh`).
+   `jolarca-compliance`, and reconcile drift (`../scripts/check-drift.sh`).
 
 ## State recovery
 

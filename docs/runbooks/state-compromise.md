@@ -14,7 +14,7 @@ certainty — containment first, forensics second.
 3. [ ] Revoke/rotate the CMEK key version: leaked copies become unreadable
    (`../../security/key-custody.md`).
 4. [ ] Preserve evidence: copy bucket audit logs BEFORE changing anything
-   further; store in `jol-m-compliance` evidence area.
+   further; store in `jolarca-compliance` evidence area.
 
 ## Assessment
 
@@ -35,7 +35,7 @@ certainty — containment first, forensics second.
 
 11. [ ] Blameless postmortem → ADR or policy change if structural.
 12. [ ] Update `../threat-model.md` residual ratings.
-13. [ ] File evidence bundle in `jol-m-compliance`.
+13. [ ] File evidence bundle in `jolarca-compliance`.
 
 ## Log
 

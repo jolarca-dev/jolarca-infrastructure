@@ -1,6 +1,6 @@
 # Access review — quarterly template & log
 
-**Cadence:** quarterly. **Evidence destination:** `jol-m-compliance`.
+**Cadence:** quarterly. **Evidence destination:** `jolarca-compliance`.
 **Standards:** SOC 2 CC6.1 (periodic review of logical access), ISO 27001
 A.5.18 (access rights review), PCI-DSS 7.2.5 / 12.5.2.
 

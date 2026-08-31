@@ -7,7 +7,7 @@
 
 | Role | Party | Position |
 |------|-------|----------|
-| Provider | `payments_app` in `jol-m-marketplace` | sole Stripe integrator, sole PCI/SAQ-A scope |
+| Provider | `payments_app` in `jolarca` | sole Stripe integrator, sole PCI/SAQ-A scope |
 | Consumer | `jol-hub` (mission platform) | client of the boundary; never a peer to Stripe |
 
 This document is implementable as written: endpoint shapes, auth,

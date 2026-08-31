@@ -2,9 +2,9 @@
   "format_version": "1.2",
   "resource_changes": [
     {
-      "address": "github_repository.repos[\"jol-m-infrastructure\"]",
+      "address": "github_repository.repos[\"jolarca-infrastructure\"]",
       "type": "github_repository",
-      "change": {"actions": ["no-op"], "after": {"name": "jol-m-infrastructure", "visibility": "private"}}
+      "change": {"actions": ["no-op"], "after": {"name": "jolarca-infrastructure", "visibility": "private"}}
     },
     {
       "address": "google_storage_bucket.state",

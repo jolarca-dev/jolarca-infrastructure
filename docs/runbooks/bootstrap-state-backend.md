@@ -33,7 +33,7 @@ gitleaks detect --source . --no-banner --redact # expected: no findings
 ```
 
 Record: change-request ID, start timestamp, both operator names (solo
-era: single operator + deviation note) in the `jol-m-compliance` change
+era: single operator + deviation note) in the `jolarca-compliance` change
 log. **GATE 0 — operator confirms to proceed.**
 
 ## 1. Bootstrap the STAGING custody stack

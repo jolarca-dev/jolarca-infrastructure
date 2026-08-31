@@ -18,7 +18,7 @@
 # dual-homed (as the real boundary is). The k8s equivalent is the
 # default-deny NetworkPolicy set (jol-hub infra) + the payments_app
 # egress allow-list (marketplace GKE), per
-# jol-m-infrastructure/security/network-policy.md.
+# jolarca-infrastructure/security/network-policy.md.
 #
 # Usage: scripts/e3-network-deny-test.sh
 set -euo pipefail
