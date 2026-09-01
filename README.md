@@ -1,7 +1,7 @@
 # jolarca-infrastructure — The Marketplace Moat
 
 **Private** infrastructure-as-code repository for the Journey of Life marketplace
-scope (`jol-m-*` repository fleet). Scope-segregated from church-platform
+scope (`jolarca-*` repository fleet). Scope-segregated from church-platform
 infrastructure per ISO 27001:2022 A.5.2 / A.8.13.
 
 > **Access rule:** operators only. Nothing in this repository may be copied,
