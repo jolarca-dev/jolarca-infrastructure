@@ -123,7 +123,7 @@ vault secrets enable -path=secret kv-v2
 vault kv put secret/staging/django \
   SECRET_KEY=$(openssl rand -hex 32) \
   DATABASE_URL="postgres://jol_app:PASSWORD@10.10.1.3:5432/jol_marketplace?sslmode=verify-full" \
-  STRIPE_SECRET_KEY="sk_test_PLACEHOLDER" \
+  STRIPE_SECRET_KEY="<YOUR_STRIPE_TEST_KEY_FROM_DASHBOARD>" \
   STRIPE_WEBHOOK_SECRET="whsec_PLACEHOLDER"
 
 vault kv put secret/staging/postgres \
