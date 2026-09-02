@@ -1,0 +1,7 @@
+# .gitleaksignore — suppress known false positives.
+# Each line is a gitleaks fingerprint (commit:file:rule:line).
+# Only add entries after verifying they are NOT real secrets.
+
+# sk_test_PLACEHOLDER in staging runbook — documentation placeholder, not a real key.
+# Replaced with <YOUR_STRIPE_TEST_KEY_FROM_DASHBOARD> in commit fa04192.
+11a1dc72baa02eaabdda74052c104ef517b35e65:docs/staging-deployment-runbook.md:stripe-access-token:126
