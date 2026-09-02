@@ -34,10 +34,10 @@ jobs:
       matrix:
         env: [staging, production]
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: ./.github/actions/terraform-setup
       - name: tflint
-        uses: terraform-linters/setup-tflint@v4
+        uses: terraform-linters/setup-tflint@v6
       # Fail on errors only: warnings (e.g. scaffold variables reserved for
       # pending workstreams) are visible in the log but do not block merge.
       - run: tflint --init && tflint --minimum-failure-severity=error
@@ -73,7 +73,7 @@ jobs:
       contents: read
       pull-requests: write
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: ./.github/actions/terraform-setup
       - name: Plan (production root, read-only token)
         working-directory: terraform/environments/production
@@ -84,7 +84,7 @@ jobs:
           terraform plan -lock=false -no-color -out=tfplan
           terraform show -no-color tfplan > plan.txt
       - name: Attach plan summary to PR
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             const fs = require('fs');
@@ -94,7 +94,7 @@ jobs:
               issue_number: context.issue.number, owner: context.repo.owner, repo: context.repo.repo,
               body: `**Terraform plan (production)**\n\n\`\`\`\n${summary}\n\`\`\`\nFull plan in workflow artifacts.`
             });
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: tf-plan-production
           path: terraform/environments/production/plan.txt
@@ -107,7 +107,7 @@ jobs:
     # requires the two-person rule (reviewers configured per environment).
     environment: ${{ inputs.environment }}
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: ./.github/actions/terraform-setup
       - name: Select environment state SA
         id: sa
