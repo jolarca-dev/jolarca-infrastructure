@@ -1,0 +1,23 @@
+---
+# ansible-lint configuration.
+# https://ansible-lint.readthedocs.io/configuring/
+
+profile: production
+
+skip_list:
+  # We use shell where the ansible builtin cannot express the logic;
+  # each shell: task has set -euo pipefail and explicit changed_when.
+  - command-instead-of-shell
+  - no-changed-when
+
+warn_list:
+  - experimental
+  - role-name  # our roles use descriptive names, not galaxy format
+
+exclude_paths:
+  - .github/
+  - terraform/
+  - kubernetes/
+  - molecule/
+
+offline: false

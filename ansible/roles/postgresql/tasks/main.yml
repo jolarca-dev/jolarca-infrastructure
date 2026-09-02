@@ -1,0 +1,109 @@
+---
+- name: Install PostgreSQL repository prerequisites
+  ansible.builtin.apt:
+    name:
+      - gnupg
+      - postgresql-common
+      - apt-transport-https
+      - lsb-release
+    state: present
+  tags: [postgresql, packages]
+
+- name: Add PostgreSQL APT repository
+  ansible.builtin.shell: |
+    set -euo pipefail
+    /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
+  args:
+    creates: "/etc/apt/sources.list.d/pgdg.list"
+  tags: [postgresql, packages]
+
+- name: Install PostgreSQL {{ pg_version }}
+  ansible.builtin.apt:
+    name:
+      - "postgresql-{{ pg_version }}"
+      - "postgresql-client-{{ pg_version }}"
+      - "postgresql-server-dev-{{ pg_version }}"
+      - python3-psycopg2
+    state: present
+  tags: [postgresql, packages]
+
+- name: Install PostgreSQL extensions
+  ansible.builtin.apt:
+    name:
+      - "postgresql-{{ pg_version }}-postgis-3"
+      - "postgresql-{{ pg_version }}-pgvector"
+    state: present
+  tags: [postgresql, extensions]
+
+- name: Configure pg_hba.conf
+  ansible.builtin.template:
+    src: pg_hba.conf.j2
+    dest: "{{ pg_conf_dir }}/pg_hba.conf"
+    owner: postgres
+    group: postgres
+    mode: "0640"
+  notify: Reload postgresql
+  tags: [postgresql, config]
+
+- name: Configure postgresql.conf
+  ansible.builtin.template:
+    src: postgresql.conf.j2
+    dest: "{{ pg_conf_dir }}/conf.d/99-jolarca.conf"
+    owner: postgres
+    group: postgres
+    mode: "0644"
+  notify: Restart postgresql
+  tags: [postgresql, config]
+
+- name: Ensure conf.d directory exists
+  ansible.builtin.file:
+    path: "{{ pg_conf_dir }}/conf.d"
+    state: directory
+    owner: postgres
+    group: postgres
+    mode: "0755"
+  tags: [postgresql, config]
+
+- name: Enable and start PostgreSQL
+  ansible.builtin.systemd:
+    name: postgresql
+    enabled: true
+    state: started
+  tags: [postgresql, service]
+
+- name: Create PostgreSQL databases
+  community.postgresql.postgresql_db:
+    name: "{{ item.name }}"
+    state: present
+  become_user: postgres
+  loop: "{{ pg_databases }}"
+  loop_control:
+    label: "{{ item.name }}"
+  when: pg_databases | length > 0
+  tags: [postgresql, databases]
+
+- name: Create PostgreSQL users
+  community.postgresql.postgresql_user:
+    name: "{{ item.name }}"
+    password: "{{ item.password | default(omit) }}"
+    role_attr_flags: "{{ item.role_attr_flags | default('NOSUPERUSER,NOCREATEDB') }}"
+    state: present
+  become_user: postgres
+  loop: "{{ pg_users }}"
+  loop_control:
+    label: "{{ item.name }}"
+  when: pg_users | length > 0
+  no_log: true
+  tags: [postgresql, users]
+
+- name: Enable pgcrypto extension
+  community.postgresql.postgresql_ext:
+    name: pgcrypto
+    db: "{{ item.name }}"
+    state: present
+  become_user: postgres
+  loop: "{{ pg_databases }}"
+  loop_control:
+    label: "{{ item.name }}"
+  when: pg_databases | length > 0
+  tags: [postgresql, extensions]

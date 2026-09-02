@@ -1,0 +1,15 @@
+---
+galaxy_info:
+  role_name: backup
+  author: jolarca-infra
+  description: BorgBackup with encryption and retention
+  license: MIT
+  min_ansible_version: "2.16"
+  platforms:
+    - name: Ubuntu
+      versions: [jammy, noble]
+    - name: Debian
+      versions: [bookworm]
+  galaxy_tags: [backup, borg, borgbackup]
+dependencies:
+  - role: hardening

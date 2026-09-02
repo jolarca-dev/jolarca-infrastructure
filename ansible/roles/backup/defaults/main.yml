@@ -1,0 +1,76 @@
+---
+# Backup role defaults — comprehensive backup for the Jolarca marketplace.
+# Covers: PostgreSQL (pg_dump + WAL), MinIO, Vault, app config.
+
+# ── Borg repository ────────────────────────────────────────────────────
+borg_repo: ""  # Must be set per-environment (e.g. borg@offsite:./jol-staging)
+borg_passphrase: ""  # From ansible-vault
+borg_encryption: repokey-blake2
+borg_compression: zstd,6
+borg_remote_path: borg1
+borg_user: root
+borg_ssh_key: ""
+
+# ── Retention ──────────────────────────────────────────────────────────
+borg_retention_daily: 7
+borg_retention_weekly: 4
+borg_retention_monthly: 12
+
+# ── Schedule ───────────────────────────────────────────────────────────
+borg_schedule_hour: 2
+borg_schedule_minute: 0
+prune_schedule_weekday: 0
+prune_schedule_hour: 3
+
+# ── PostgreSQL backup ─────────────────────────────────────────────────
+pg_backup_enabled: true
+pg_backup_dir: /var/backups/postgresql
+pg_backup_host: "10.10.1.3"  # DB host WireGuard IP
+pg_backup_databases:
+  - jol_marketplace
+pg_wal_archive_enabled: true
+pg_wal_archive_dir: /var/backups/postgresql/wal
+pg_wal_archive_timeout: 300  # 5 minutes
+
+# ── MinIO backup ──────────────────────────────────────────────────────
+minio_backup_enabled: true
+minio_backup_dir: /var/backups/minio
+minio_buckets:
+  - jol-marketplace-media
+  - jol-marketplace-uploads
+  - jol-marketplace-static
+
+# ── Vault backup ──────────────────────────────────────────────────────
+vault_backup_enabled: true
+vault_backup_dir: /var/backups/vault
+vault_data_dir: /opt/vault/data
+
+# ── App config backup ────────────────────────────────────────────────
+app_backup_enabled: true
+app_backup_paths:
+  - /opt/jolarca/config
+  - /opt/jolarca/docker-compose.backend.yml
+  - /opt/jolarca/docker-compose.frontend.yml
+
+# ── Excludes ──────────────────────────────────────────────────────────
+borg_backup_exclude:
+  - "*.tmp"
+  - "*.swp"
+  - ".cache"
+  - "__pycache__"
+  - "*.pyc"
+  - ".git"
+  - "node_modules"
+
+# ── Offsite sync ──────────────────────────────────────────────────────
+offsite_sync_enabled: false
+offsite_ssh_user: borg
+offsite_ssh_host: ""
+offsite_repo_path: ""
+offsite_sync_hour: 4
+offsite_sync_minute: 0
+
+# ── Monitoring ────────────────────────────────────────────────────────
+backup_monitoring_enabled: true
+backup_staleness_hours: 25
+backup_log_file: /var/log/borg-backup.log

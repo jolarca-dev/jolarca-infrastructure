@@ -1,0 +1,149 @@
+---
+# 40-postgresql.yml — PostgreSQL 17 with PostGIS, pgvector, pgcrypto, TLS.
+# P3 STAGING: installs PG, creates marketplace DB + roles, enables extensions,
+# configures TLS-only connections, applies least-privilege RBAC.
+# Reference: PROXMOX_DEPLOYMENT_PLAN.md §3, security/network-policy.md
+
+- name: Install and configure PostgreSQL for staging
+  hosts: db
+  become: true
+  gather_facts: true
+
+  vars:
+    marketplace_db: jol_marketplace
+    marketplace_user: jol_app
+    marketplace_ro_user: jol_readonly
+
+  roles:
+    - role: postgresql
+
+  tasks:
+    # ── Marketplace database & roles ────────────────────────────────────
+
+    - name: Create marketplace database
+      community.postgresql.postgresql_db:
+        name: "{{ marketplace_db }}"
+        state: present
+        encoding: UTF-8
+        lc_collate: "en_US.UTF-8"
+        lc_ctype: "en_US.UTF-8"
+      become_user: postgres
+      tags: [postgresql, marketplace]
+
+    - name: Enable PostGIS extension
+      community.postgresql.postgresql_ext:
+        name: postgis
+        db: "{{ marketplace_db }}"
+        state: present
+      become_user: postgres
+      tags: [postgresql, extensions]
+
+    - name: Enable pgvector extension
+      community.postgresql.postgresql_ext:
+        name: vector
+        db: "{{ marketplace_db }}"
+        state: present
+      become_user: postgres
+      tags: [postgresql, extensions]
+
+    - name: Enable pgcrypto extension
+      community.postgresql.postgresql_ext:
+        name: pgcrypto
+        db: "{{ marketplace_db }}"
+        state: present
+      become_user: postgres
+      tags: [postgresql, extensions]
+
+    - name: Create application user (read-write)
+      community.postgresql.postgresql_user:
+        name: "{{ marketplace_user }}"
+        password: "{{ vault_pg_app_password | default('CHANGE_ME_FROM_VAULT') }}"
+        role_attr_flags: "NOSUPERUSER,NOCREATEDB,NOCREATEROLE"
+        state: present
+      become_user: postgres
+      no_log: true
+      tags: [postgresql, marketplace]
+
+    - name: Create readonly user
+      community.postgresql.postgresql_user:
+        name: "{{ marketplace_ro_user }}"
+        password: "{{ vault_pg_ro_password | default('CHANGE_ME_FROM_VAULT') }}"
+        role_attr_flags: "NOSUPERUSER,NOCREATEDB,NOCREATEROLE"
+        state: present
+      become_user: postgres
+      no_log: true
+      tags: [postgresql, marketplace]
+
+    - name: Grant application user full access to marketplace DB
+      community.postgresql.postgresql_privs:
+        db: "{{ marketplace_db }}"
+        role: "{{ marketplace_user }}"
+        type: database
+        privs: ALL
+        state: present
+      become_user: postgres
+      tags: [postgresql, marketplace]
+
+    - name: Grant readonly user SELECT on all tables
+      community.postgresql.postgresql_privs:
+        db: "{{ marketplace_db }}"
+        role: "{{ marketplace_ro_user }}"
+        type: table
+        privs: SELECT
+        objs: ALL_IN_SCHEMA
+        schema: public
+        state: present
+      become_user: postgres
+      tags: [postgresql, marketplace]
+
+    - name: Set default privileges for readonly user on future tables
+      community.postgresql.postgresql_privs:
+        db: "{{ marketplace_db }}"
+        role: "{{ marketplace_ro_user }}"
+        type: default_privs
+        privs: SELECT
+        objs: TABLES
+        schema: public
+        target_roles: "{{ marketplace_user }}"
+        state: present
+      become_user: postgres
+      tags: [postgresql, marketplace]
+
+    # ── TLS enforcement ────────────────────────────────────────────────
+
+    - name: Ensure SSL certificate exists (snakeoil for staging)
+      ansible.builtin.apt:
+        name: ssl-cert
+        state: present
+      tags: [postgresql, tls]
+
+    - name: Verify pg_hba.conf enforces SSL for app connections
+      ansible.builtin.lineinfile:
+        path: "{{ pg_conf_dir }}/pg_hba.conf"
+        line: "hostssl  {{ marketplace_db }}  {{ marketplace_user }}  {{ wg_subnet | default('10.10.1.0/24') }}  scram-sha-256"
+        state: present
+      notify: Reload postgresql
+      tags: [postgresql, tls]
+
+  post_tasks:
+    - name: Verify PostgreSQL is accepting connections
+      ansible.builtin.command: >
+        sudo -u postgres psql -d {{ marketplace_db }} -c "SELECT version();"
+      register: pg_version_check
+      changed_when: false
+      failed_when: pg_version_check.rc != 0
+
+    - name: Verify extensions are enabled
+      ansible.builtin.command: >
+        sudo -u postgres psql -d {{ marketplace_db }} -t -c
+        "SELECT extname FROM pg_extension WHERE extname IN ('postgis','vector','pgcrypto') ORDER BY extname;"
+      register: pg_extensions_check
+      changed_when: false
+
+    - name: Report PostgreSQL status
+      ansible.builtin.debug:
+        msg: |
+          PostgreSQL: {{ pg_version_check.stdout_lines[1] | trim }}
+          Extensions: {{ pg_extensions_check.stdout | trim }}
+          Database: {{ marketplace_db }}
+          Users: {{ marketplace_user }} (rw), {{ marketplace_ro_user }} (ro)

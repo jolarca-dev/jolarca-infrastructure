@@ -1,0 +1,40 @@
+---
+# 00-hardening.yml — CIS baseline hardening for ALL hosts.
+# Reference: security/cis-baseline.md
+# This playbook MUST run first on every host.
+
+- name: Apply CIS baseline hardening
+  hosts: all
+  become: true
+  gather_facts: true
+  roles:
+    - role: hardening
+  post_tasks:
+    - name: Verify SSH is running
+      ansible.builtin.systemd:
+        name: sshd
+        state: started
+      check_mode: true
+      register: sshd_check
+
+    - name: Verify nftables is running
+      ansible.builtin.systemd:
+        name: nftables
+        state: started
+      check_mode: true
+      register: nftables_check
+
+    - name: Verify fail2ban is running
+      ansible.builtin.systemd:
+        name: fail2ban
+        state: started
+      check_mode: true
+      register: fail2ban_check
+
+    - name: Report hardening status
+      ansible.builtin.debug:
+        msg: >
+          Hardening complete on {{ inventory_hostname }}:
+          sshd={{ sshd_check.status.ActiveState | default('unknown') }},
+          nftables={{ nftables_check.status.ActiveState | default('unknown') }},
+          fail2ban={{ fail2ban_check.status.ActiveState | default('unknown') }}

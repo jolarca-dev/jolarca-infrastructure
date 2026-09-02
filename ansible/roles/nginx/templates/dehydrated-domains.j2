@@ -1,0 +1,4 @@
+# {{ ansible_managed }}
+# Domains for Let's Encrypt certificate issuance
+# One domain per line, space-separated for SANs
+{{ letsencrypt_domains | default('staging.jolarca.org') }}

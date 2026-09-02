@@ -1,0 +1,26 @@
+---
+- name: Verify — postgresql role
+  hosts: all
+  become: true
+  tasks:
+    - name: Verify PostgreSQL is installed
+      ansible.builtin.package:
+        name: "postgresql-17"
+        state: present
+      check_mode: true
+      register: pg_pkg
+      failed_when: pg_pkg is changed
+
+    - name: Verify PostgreSQL service is running
+      ansible.builtin.systemd:
+        name: postgresql
+        state: started
+      check_mode: true
+      register: pg_svc
+      failed_when: pg_svc is changed
+
+    - name: Verify pg_hba.conf exists
+      ansible.builtin.stat:
+        path: /etc/postgresql/17/main/pg_hba.conf
+      register: pg_hba
+      failed_when: not pg_hba.stat.exists

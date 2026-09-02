@@ -1,0 +1,27 @@
+---
+# Redis role defaults — secure, Vault-fed, cache/queue use.
+
+redis_version: "7.2"
+redis_bind: "10.10.1.2"  # WireGuard IP — never 0.0.0.0
+redis_port: 6379
+redis_password: "{{ vault_redis_password | default('CHANGE_ME_FROM_VAULT') }}"
+redis_protected_mode: "yes"
+redis_maxmemory: "256mb"
+redis_maxmemory_policy: "allkeys-lru"
+
+# Persistence — AOF everysec for Celery broker reliability.
+# For pure cache, set redis_aof_enabled: no.
+redis_aof_enabled: "yes"
+redis_aof_fsync: "everysec"
+redis_rdb_save: "60 1000"
+
+# Dangerous commands disabled (renamed to empty string)
+redis_disabled_commands:
+  - FLUSHALL
+  - FLUSHDB
+  - DEBUG
+  - CONFIG
+
+# TLS (internal CA)
+redis_tls_enabled: false  # Enable when internal CA certs are deployed
+redis_tls_port: 6380

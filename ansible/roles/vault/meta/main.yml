@@ -1,0 +1,15 @@
+---
+galaxy_info:
+  role_name: vault
+  author: jolarca-infra
+  description: HashiCorp Vault with raft storage, TLS, audit
+  license: MIT
+  min_ansible_version: "2.16"
+  platforms:
+    - name: Ubuntu
+      versions: [jammy, noble]
+    - name: Debian
+      versions: [bookworm]
+  galaxy_tags: [vault, secrets, hashicorp]
+dependencies:
+  - role: hardening

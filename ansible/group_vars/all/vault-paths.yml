@@ -1,0 +1,33 @@
+---
+# HashiCorp Vault secret paths — documents where each secret lives at runtime.
+# These paths are used by the application to fetch secrets; they are NOT
+# the ansible-vault encrypted files (those live in vault/<env>/secrets.yml).
+#
+# Ansible playbooks use ansible-vault for provisioning-time secrets
+# (SSH keys, DB passwords during setup). Runtime secrets live in
+# HashiCorp Vault and are fetched by the application at startup.
+
+vault_secret_paths:
+  django:
+    secret_key: "secret/staging/django/SECRET_KEY"
+    database_url: "secret/staging/django/DATABASE_URL"
+    stripe_secret_key: "secret/staging/django/STRIPE_SECRET_KEY"
+    stripe_webhook_secret: "secret/staging/django/STRIPE_WEBHOOK_SECRET"
+
+  postgres:
+    password: "secret/staging/postgres/password"
+    replication_password: "secret/staging/postgres/replication_password"
+
+  minio:
+    root_user: "secret/staging/minio/root-user"
+    root_password: "secret/staging/minio/root-password"
+
+  wireguard:
+    edge_private_key: "secret/staging/wireguard/edge/private-key"
+    app_private_key: "secret/staging/wireguard/app/private-key"
+    db_private_key: "secret/staging/wireguard/db/private-key"
+    vault_private_key: "secret/staging/wireguard/vault/private-key"
+
+  pki:
+    root_ca: "pki/root"
+    intermediate_ca: "pki/intermediate"

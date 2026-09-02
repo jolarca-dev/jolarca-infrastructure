@@ -1,0 +1,157 @@
+# Alert rules — encode our RTO/RPO promises as code.
+# Each alert has: severity, detection threshold, and why it matters.
+groups:
+  - name: infrastructure
+    rules:
+      # ── Database ──────────────────────────────────────────────────
+      - alert: PostgreSQLDown
+        expr: pg_up == 0
+        for: 1m
+        labels:
+          severity: page
+          component: database
+        annotations:
+          summary: "PostgreSQL is down on {{ $labels.instance }}"
+          description: "Database is unreachable. RPO at risk."
+          runbook: "docs/incident-runbook.md#1-database-down"
+
+      - alert: PostgreSQLReplicationLag
+        expr: pg_replication_lag > 300  # 5 minutes
+        for: 2m
+        labels:
+          severity: page
+          component: database
+        annotations:
+          summary: "PG replication lag > 5min on {{ $labels.instance }}"
+          description: "RPO target is ≤ 15min. Current lag threatens this."
+          runbook: "docs/incident-runbook.md#1-database-down"
+
+      # ── Backups ───────────────────────────────────────────────────
+      - alert: BackupStale
+        expr: (time() - backup_last_success_timestamp) > 90000  # 25 hours
+        for: 10m
+        labels:
+          severity: page
+          component: backup
+        annotations:
+          summary: "No successful backup in > 25h on {{ $labels.instance }}"
+          description: "Daily backup cadence broken. Data loss risk."
+          runbook: "docs/incident-runbook.md#4-backup-stale"
+
+      - alert: BackupFailed
+        expr: backup_last_exit_code != 0
+        for: 5m
+        labels:
+          severity: page
+          component: backup
+        annotations:
+          summary: "Last backup failed on {{ $labels.instance }}"
+          description: "Exit code: {{ $value }}. Investigate immediately."
+          runbook: "docs/incident-runbook.md#4-backup-stale"
+
+      # ── Certificates ──────────────────────────────────────────────
+      - alert: CertificateExpiringSoon
+        expr: nginx_ssl_certificate_expiry_seconds < 1209600  # 14 days
+        for: 1h
+        labels:
+          severity: ticket
+          component: edge
+        annotations:
+          summary: "TLS certificate expires in < 14 days on {{ $labels.instance }}"
+          description: "Certificate expires at {{ $value | humanizeDuration }}."
+          runbook: "docs/incident-response-deployment.md#scenario-e"
+
+      - alert: CertificateExpiringCritical
+        expr: nginx_ssl_certificate_expiry_seconds < 86400  # 1 day
+        for: 5m
+        labels:
+          severity: page
+          component: edge
+        annotations:
+          summary: "TLS certificate expires in < 24h on {{ $labels.instance }}"
+          description: "IMMEDIATE ACTION REQUIRED."
+          runbook: "docs/incident-response-deployment.md#scenario-e"
+
+      # ── WireGuard ─────────────────────────────────────────────────
+      - alert: WireGuardHandshakeStale
+        expr: wireguard_latest_handshake_seconds > 600  # 10 minutes
+        for: 5m
+        labels:
+          severity: page
+          component: network
+        annotations:
+          summary: "WG handshake stale > 10min: {{ $labels.instance }} → {{ $labels.peer }}"
+          description: "The only bridge between planes may be down."
+          runbook: "docs/incident-runbook.md#5-wireguard-mesh-failure"
+
+      # ── Vault ─────────────────────────────────────────────────────
+      - alert: VaultSealed
+        expr: vault_sealed == 1
+        for: 1m
+        labels:
+          severity: page
+          component: vault
+        annotations:
+          summary: "Vault is sealed on {{ $labels.instance }}"
+          description: "All secrets are inaccessible. App will fail."
+          runbook: "docs/incident-runbook.md#3-vault-sealed"
+
+      # ── Application ───────────────────────────────────────────────
+      - alert: DjangoBackendDown
+        expr: up{job="django_backend"} == 0
+        for: 1m
+        labels:
+          severity: page
+          component: app
+        annotations:
+          summary: "Django backend is down on {{ $labels.instance }}"
+          description: "API is unavailable."
+          runbook: "docs/incident-runbook.md#2-payment-webhook-failure"
+
+      - alert: HighErrorRate
+        expr: rate(django_http_responses_total_by_status_total{status=~"5.."}[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: page
+          component: app
+        annotations:
+          summary: "High 5xx error rate on {{ $labels.instance }}"
+          description: "{{ $value }} errors/sec over 5 minutes."
+          runbook: "docs/incident-runbook.md#2-payment-webhook-failure"
+
+      # ── Payment Webhooks ──────────────────────────────────────────
+      - alert: StripeWebhookFailures
+        expr: rate(stripe_webhook_failures_total[15m]) > 0.05
+        for: 10m
+        labels:
+          severity: page
+          component: payments
+        annotations:
+          summary: "Stripe webhook failure rate elevated"
+          description: "{{ $value }} failures/sec. Payments may be out of sync."
+          runbook: "docs/incident-runbook.md#2-payment-webhook-failure"
+
+      # ── Proxmox Host ──────────────────────────────────────────────
+      - alert: ProxmoxHostDown
+        expr: node_uname_info{job="node_exporter"} == 0 and on(instance) label_replace(proxmox_node_info, "instance", "$1", "address", "(.+)")
+        for: 2m
+        labels:
+          severity: page
+          component: hypervisor
+        annotations:
+          summary: "Proxmox host unreachable"
+          description: "All VMs/LXCs on this host are down."
+          runbook: "docs/incident-runbook.md#5-proxmox-host-failure"
+
+  - name: terraform
+    rules:
+      - alert: TerraformDrift
+        expr: drift_detection_issues > 0
+        for: 1h
+        labels:
+          severity: ticket
+          component: infrastructure
+        annotations:
+          summary: "Terraform drift detected"
+          description: "{{ $value }} resources have drifted from state."
+          runbook: "docs/terraform-proxmox.md"

@@ -1,0 +1,27 @@
+---
+- name: Verify monitoring stack
+  hosts: all
+  become: true
+  tasks:
+    - name: Check Prometheus is running
+      ansible.builtin.systemd:
+        name: prometheus
+      register: prom_status
+      failed_when: prom_status.status.ActiveState != "active"
+
+    - name: Check Prometheus responds
+      ansible.builtin.uri:
+        url: "http://localhost:9090/-/healthy"
+        status_code: [200]
+
+    - name: Check Grafana is running
+      ansible.builtin.systemd:
+        name: grafana-server
+      register: grafana_status
+      failed_when: grafana_status.status.ActiveState != "active"
+
+    - name: Check Alertmanager is running
+      ansible.builtin.systemd:
+        name: alertmanager
+      register: am_status
+      failed_when: am_status.status.ActiveState != "active"

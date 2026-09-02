@@ -1,0 +1,47 @@
+---
+# Redis role — secure, Vault-fed, bound to WireGuard IP only.
+
+- name: Install Redis
+  ansible.builtin.apt:
+    name:
+      - redis-server
+      - redis-tools
+    state: present
+  tags: [redis, packages]
+
+- name: Deploy Redis configuration
+  ansible.builtin.template:
+    src: redis.conf.j2
+    dest: /etc/redis/redis.conf
+    owner: redis
+    group: redis
+    mode: "0640"
+  notify: Restart redis
+  tags: [redis, config]
+
+- name: Disable dangerous Redis commands
+  ansible.builtin.lineinfile:
+    path: /etc/redis/redis.conf
+    line: "rename-command {{ item }} \"\""
+    regexp: "^rename-command {{ item }}"
+    state: present
+  loop: "{{ redis_disabled_commands }}"
+  notify: Restart redis
+  tags: [redis, hardening]
+
+- name: Ensure Redis is enabled and started
+  ansible.builtin.systemd:
+    name: redis-server
+    enabled: true
+    state: started
+  tags: [redis, service]
+
+- name: Verify Redis responds to PING
+  ansible.builtin.command: >
+    redis-cli -h {{ redis_bind }} -p {{ redis_port }}
+    -a {{ redis_password }} PING
+  register: redis_ping
+  changed_when: false
+  failed_when: redis_ping.stdout | trim != "PONG"
+  no_log: true
+  tags: [redis, verify]

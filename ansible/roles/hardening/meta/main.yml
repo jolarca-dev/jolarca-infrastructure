@@ -1,0 +1,20 @@
+---
+galaxy_info:
+  role_name: hardening
+  author: jolarca-infra
+  description: CIS baseline host hardening (SSH, nftables, fail2ban, auditd, sysctl)
+  license: MIT
+  min_ansible_version: "2.16"
+  platforms:
+    - name: Ubuntu
+      versions:
+        - jammy
+        - noble
+    - name: Debian
+      versions:
+        - bookworm
+  galaxy_tags:
+    - hardening
+    - cis
+    - security
+dependencies: []

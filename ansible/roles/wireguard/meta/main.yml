@@ -1,0 +1,15 @@
+---
+galaxy_info:
+  role_name: wireguard
+  author: jolarca-infra
+  description: WireGuard mesh VPN setup
+  license: MIT
+  min_ansible_version: "2.16"
+  platforms:
+    - name: Ubuntu
+      versions: [jammy, noble]
+    - name: Debian
+      versions: [bookworm]
+  galaxy_tags: [wireguard, vpn, mesh]
+dependencies:
+  - role: hardening

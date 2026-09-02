@@ -1,0 +1,36 @@
+# {{ ansible_managed }}
+# PostgreSQL configuration — jolarca tuning
+
+listen_addresses = {{ pg_listen_addresses }}
+port = {{ pg_port }}
+
+# Connection
+max_connections = {{ pg_max_connections }}
+
+# Memory
+shared_buffers = {{ pg_shared_buffers }}
+effective_cache_size = {{ pg_effective_cache_size }}
+work_mem = {{ pg_work_mem }}
+
+# WAL
+wal_level = replica
+max_wal_senders = 5
+wal_keep_size = '1GB'
+
+# SSL
+ssl = {{ 'on' if pg_ssl else 'off' }}
+ssl_cert_file = '{{ pg_ssl_cert_file }}'
+ssl_key_file = '{{ pg_ssl_key_file }}'
+ssl_min_protocol_version = 'TLSv1.2'
+
+# Logging
+logging_collector = on
+log_directory = 'log'
+log_filename = 'postgresql-%Y-%m-%d.log'
+log_rotation_age = 1d
+log_rotation_size = 100MB
+log_min_duration_statement = 1000
+log_line_prefix = '%t [%p]: [%l-1] user=%u,db=%d,app=%a,client=%h '
+
+# Include additional configuration
+include_dir = 'conf.d'

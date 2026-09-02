@@ -1,0 +1,8 @@
+---
+- name: Converge — wireguard role
+  hosts: all
+  become: true
+  tasks:
+    - name: Include wireguard role
+      ansible.builtin.include_role:
+        name: wireguard

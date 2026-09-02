@@ -1,0 +1,75 @@
+---
+# Hardening role defaults — CIS Ubuntu 22.04/24.04 Level 1 baseline.
+# Override per-host or per-group as needed.
+
+# SSH
+hardening_ssh_port: "{{ ssh_port | default(22) }}"
+hardening_ssh_permit_root_login: "no"
+hardening_ssh_password_auth: "no"
+hardening_ssh_max_auth_tries: 3
+hardening_ssh_client_alive_interval: 300
+hardening_ssh_client_alive_count_max: 2
+hardening_ssh_permit_empty_password: "no"
+hardening_ssh_x11_forwarding: "no"
+
+# nftables
+hardening_nftables_enabled: true
+hardening_nftables_default_input: drop
+hardening_nftables_default_forward: drop
+hardening_nftables_allowed_tcp: "{{ firewall_allowed_tcp_global | default([22]) }}"
+hardening_nftables_allowed_udp:
+  - "{{ wg_port | default(51820) }}"
+
+# fail2ban
+hardening_fail2ban_enabled: true
+hardening_fail2ban_maxretry: 3
+hardening_fail2ban_bantime: "15m"
+hardening_fail2ban_findtime: "10m"
+
+# unattended-upgrades
+hardening_unattended_upgrades: true
+hardening_unattended_autofix: true
+hardening_unattended_reboot: false
+
+# auditd
+hardening_auditd_enabled: true
+
+# sysctl hardening
+hardening_sysctl:
+  # Disable IP forwarding (enable per-role where needed)
+  net.ipv4.ip_forward: 0
+  # Disable packet redirect
+  net.ipv4.conf.all.send_redirects: 0
+  net.ipv4.conf.default.send_redirects: 0
+  # Source routing
+  net.ipv4.conf.all.accept_source_route: 0
+  net.ipv4.conf.default.accept_source_route: 0
+  # ICMP redirect
+  net.ipv4.conf.all.accept_redirects: 0
+  net.ipv4.conf.default.accept_redirects: 0
+  net.ipv4.conf.all.secure_redirects: 0
+  net.ipv4.conf.default.secure_redirects: 0
+  # SYN flood
+  net.ipv4.tcp_syncookies: 1
+  # Log martians
+  net.ipv4.conf.all.log_martians: 1
+  net.ipv4.conf.default.log_martians: 1
+  # Ignore ICMP broadcasts
+  net.ipv4.icmp_echo_ignore_broadcasts: 1
+  # Core dumps
+  fs.suid_dumpable: 0
+
+# umask
+hardening_umask: "027"
+
+# chrony (NTP)
+hardening_chrony_enabled: true
+hardening_ntp_servers: "{{ ntp_servers | default(['0.pool.ntp.org', '1.pool.ntp.org']) }}"
+
+# node_exporter (Prometheus metrics)
+node_exporter_version: "1.8.2"
+node_exporter_listen_address: ":9100"
+
+# Internal CA certificate (path to CA cert file on the Ansible controller)
+# Set to '' to skip CA distribution (e.g., before the CA is bootstrapped).
+hardening_internal_ca_cert: ""

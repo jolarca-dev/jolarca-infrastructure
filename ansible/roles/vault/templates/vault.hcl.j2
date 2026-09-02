@@ -1,0 +1,32 @@
+# {{ ansible_managed }}
+# HashiCorp Vault configuration
+
+ui = {{ 'true' if vault_enable_ui else 'false' }}
+
+listener "tcp" {
+  address       = "0.0.0.0:{{ vault_port }}"
+  tls_cert_file = "{{ vault_tls_cert_file }}"
+  tls_key_file  = "{{ vault_tls_key_file }}"
+  tls_min_version = "tls12"
+}
+
+storage "raft" {
+  path = "{{ vault_data_dir }}"
+  node_id = "{{ inventory_hostname }}"
+}
+
+cluster_addr = "{{ vault_cluster_addr }}"
+api_addr     = "{{ vault_api_addr }}"
+
+disable_mlock = false
+
+{% if vault_audit_enabled %}
+audit "file" {
+  file_path = "{{ vault_log_dir }}/audit.log"
+}
+{% endif %}
+
+telemetry {
+  prometheus_retention_time = "30s"
+  disable_hostname = true
+}

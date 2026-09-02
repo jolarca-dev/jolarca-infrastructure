@@ -1,0 +1,33 @@
+# {{ ansible_managed }}
+# Docker Compose — Next.js frontend
+name: jol-frontend
+
+services:
+  frontend:
+    build:
+      context: {{ app_dir }}/app/frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: http://127.0.0.1:{{ django_port }}
+    image: jol-frontend:{{ app_branch }}
+    restart: unless-stopped
+    env_file: {{ app_dir }}/config/app.env
+    environment:
+      NODE_ENV: production
+      PORT: "{{ frontend_port }}"
+      HOSTNAME: "0.0.0.0"
+    expose:
+      - "{{ frontend_port }}"
+    healthcheck:
+      test: ["CMD", "wget", "-qO", "/dev/null", "http://127.0.0.1:{{ frontend_port }}/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - web
+
+networks:
+  web:
+    driver: bridge
+    internal: true

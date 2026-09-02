@@ -1,0 +1,20 @@
+#!/bin/bash
+# {{ ansible_managed }}
+# PostgreSQL WAL archiving — called by archive_command in postgresql.conf.
+# Usage: pg-wal-archive.sh %p %f
+set -euo pipefail
+
+WAL_DIR="{{ pg_wal_archive_dir }}"
+SOURCE_PATH="$1"
+WAL_FILENAME="$2"
+
+# Copy WAL file to archive directory
+cp "${SOURCE_PATH}" "${WAL_DIR}/${WAL_FILENAME}"
+
+# Verify the copy
+if [ -f "${WAL_DIR}/${WAL_FILENAME}" ]; then
+  exit 0
+else
+  echo "[$(date)] ERROR: WAL archive copy failed for ${WAL_FILENAME}"
+  exit 1
+fi

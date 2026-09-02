@@ -1,0 +1,18 @@
+---
+nginx_worker_processes: "{{ nginx_worker_processes | default('auto') }}"
+nginx_worker_connections: "{{ nginx_worker_connections | default(1024) }}"
+nginx_rate_limit_rps: "{{ nginx_rate_limit_rps | default(30) }}"
+nginx_rate_limit_burst: "{{ nginx_rate_limit_burst | default(50) }}"
+nginx_security_headers: "{{ nginx_security_headers | default(true) }}"
+nginx_tls_cert: /etc/ssl/certs/ssl-cert-snakeoil.pem
+nginx_tls_key: /etc/ssl/private/ssl-cert-snakeoil.key
+nginx_upstreams: []
+# nginx_upstreams example:
+#   - name: django
+#     servers: ["127.0.0.1:8000"]
+#   - name: nextjs
+#     servers: ["127.0.0.1:3000"]
+nginx_server_names: []
+nginx_max_body_size: "10m"
+nginx_client_body_timeout: "30s"
+nginx_proxy_read_timeout: "60s"

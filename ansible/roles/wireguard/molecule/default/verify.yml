@@ -1,0 +1,18 @@
+---
+- name: Verify — wireguard role
+  hosts: all
+  become: true
+  tasks:
+    - name: Verify WireGuard is installed
+      ansible.builtin.package:
+        name: wireguard
+        state: present
+      check_mode: true
+      register: wg_pkg
+      failed_when: wg_pkg is changed
+
+    - name: Verify IP forwarding is enabled
+      ansible.builtin.command: sysctl net.ipv4.ip_forward
+      register: ip_forward
+      changed_when: false
+      failed_when: "=

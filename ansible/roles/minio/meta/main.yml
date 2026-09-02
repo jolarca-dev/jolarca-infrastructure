@@ -1,0 +1,15 @@
+---
+galaxy_info:
+  role_name: minio
+  author: jolarca-infra
+  description: MinIO S3-compatible object storage
+  license: MIT
+  min_ansible_version: "2.16"
+  platforms:
+    - name: Ubuntu
+      versions: [jammy, noble]
+    - name: Debian
+      versions: [bookworm]
+  galaxy_tags: [minio, s3, storage]
+dependencies:
+  - role: hardening

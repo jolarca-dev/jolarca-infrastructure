@@ -1,0 +1,10 @@
+---
+- name: Verify — vault role
+  hosts: all
+  become: true
+  tasks:
+    - name: Verify Vault binary is installed
+      ansible.builtin.command: vault version
+      register: vault_ver
+      changed_when: false
+      failed_when: "Vault not in vault_ver.stdout"

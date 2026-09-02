@@ -1,0 +1,12 @@
+# {{ ansible_managed }}
+# Rate limiting configuration
+
+# Connection limiting
+limit_conn_zone $binary_remote_addr zone=conn_limit:10m;
+
+# Map to exclude health checks from rate limiting
+map $request_uri $rate_limit_key {
+  ~^/health  "";
+  ~^/api/v1/health/  "";
+  default  $binary_remote_addr;
+}

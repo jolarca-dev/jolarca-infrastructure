@@ -1,0 +1,39 @@
+---
+# 65-app.yml — Deploy the Jolarca marketplace application (Django + Next.js).
+# P3 STAGING: deploys the app via Docker Compose, runs migrations,
+# collects static files, starts backend + frontend services.
+# All secrets come from Vault — no .env files committed.
+# Reference: PROXMOX_DEPLOYMENT_PLAN.md §5.2
+
+- name: Deploy Jolarca marketplace application
+  hosts: app
+  become: true
+  gather_facts: true
+  roles:
+    - role: app
+  post_tasks:
+    - name: Wait for Django backend health endpoint
+      ansible.builtin.uri:
+        url: "http://127.0.0.1:{{ django_port | default(8000) }}/api/v1/health/"
+        status_code: [200]
+      register: backend_health
+      retries: 10
+      delay: 5
+      until: backend_health is not failed
+      tags: [app, verify]
+
+    - name: Wait for Next.js frontend
+      ansible.builtin.uri:
+        url: "http://127.0.0.1:{{ frontend_port | default(3000) }}/"
+        status_code: [200, 301, 302, 307]
+      register: frontend_health
+      retries: 10
+      delay: 5
+      until: frontend_health is not failed
+      tags: [app, verify]
+
+    - name: Report application status
+      ansible.builtin.debug:
+        msg: |
+          Backend:  http://127.0.0.1:{{ django_port | default(8000) }}/api/v1/health/ — {{ backend_health.status }}
+          Frontend: http://127.0.0.1:{{ frontend_port | default(3000) }}/ — {{ frontend_health.status }}

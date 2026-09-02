@@ -1,0 +1,26 @@
+# {{ ansible_managed }}
+# Security headers — applied to all server blocks.
+# Targets SSL Labs A+ equivalent: HSTS preload, strict CSP, no info leakage.
+
+add_header X-Frame-Options "DENY" always;
+add_header X-Content-Type-Options "nosniff" always;
+add_header X-XSS-Protection "0" always;
+add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+add_header Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(self), interest-cohort=()" always;
+
+# Content-Security-Policy — strict for API, permissive for frontend
+# Frontend needs 'unsafe-inline' for Next.js inline styles and 'self' for assets
+{% if nginx_csp_mode | default('frontend') == 'api' %}
+add_header Content-Security-Policy "default-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'self';" always;
+{% else %}
+add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' {{ nginx_csp_connect_src | default('') }}; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests;" always;
+{% endif %}
+
+# HSTS — 2 years, includeSubDomains, preload-ready
+add_header Strict-Transport-Security "max-age=63072000; includeSubDomains; preload" always;
+
+# Prevent information leakage
+add_header X-Permitted-Cross-Domain-Policies "none" always;
+add_header Cross-Origin-Embedder-Policy "require-corp" always;
+add_header Cross-Origin-Opener-Policy "same-origin" always;
+add_header Cross-Origin-Resource-Policy "same-origin" always;

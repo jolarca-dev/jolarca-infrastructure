@@ -1,0 +1,38 @@
+# {{ ansible_managed }}
+server {
+  listen 80 default_server;
+  listen [::]:80 default_server;
+  server_name _;
+
+  # Redirect all HTTP to HTTPS
+  return 301 https://$host$request_uri;
+}
+
+server {
+  listen 443 ssl default_server;
+  listen [::]:443 ssl default_server;
+  server_name _;
+
+  ssl_certificate {{ nginx_tls_cert }};
+  ssl_certificate_key {{ nginx_tls_key }};
+
+  # Security headers
+  include /etc/nginx/conf.d/security_headers.conf;
+
+  # Rate limiting
+  limit_req zone=general burst={{ nginx_rate_limit_burst }} nodelay;
+  limit_conn conn_limit 20;
+
+  # Health check endpoint (no rate limit)
+  location /health {
+    access_log off;
+    return 200 '{"status":"ok"}';
+    add_header Content-Type application/json;
+  }
+
+  # Default location — placeholder
+  location / {
+    return 503 '{"error":"service not configured"}';
+    add_header Content-Type application/json;
+  }
+}

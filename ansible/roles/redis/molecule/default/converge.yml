@@ -1,0 +1,9 @@
+---
+- name: Converge
+  hosts: all
+  become: true
+  vars:
+    redis_bind: "127.0.0.1"
+    redis_password: "test_password_molecule"
+  roles:
+    - role: redis

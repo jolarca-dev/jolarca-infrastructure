@@ -1,0 +1,28 @@
+# {{ ansible_managed }}
+# WireGuard mesh VPN — security/network-policy.md
+
+[Interface]
+PrivateKey = {{ wg_effective_private_key }}
+Address = {{ wg_address }}
+ListenPort = {{ wg_listen_port }}
+{% if wg_dns %}
+DNS = {{ wg_dns }}
+{% endif %}
+{% if wg_mtu %}
+MTU = {{ wg_mtu }}
+{% endif %}
+
+{% for peer in wg_peers %}
+[Peer]
+# {{ peer.name }}
+PublicKey = {{ peer.public_key }}
+AllowedIPs = {{ peer.allowed_ips }}
+{% if peer.endpoint is defined %}
+Endpoint = {{ peer.endpoint }}
+{% endif %}
+{% if peer.preshared_key is defined and peer.preshared_key %}
+PresharedKey = {{ peer.preshared_key }}
+{% endif %}
+PersistentKeepalive = 25
+
+{% endfor %}

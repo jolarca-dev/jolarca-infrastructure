@@ -1,0 +1,28 @@
+---
+dependency:
+  name: galaxy
+  options:
+    requirements-file: ../../requirements.yml
+driver:
+  name: docker
+platforms:
+  - name: hardening-test-ubuntu
+    image: geerlingguy/docker-ubuntu2204-ansible:latest
+    pre_build_image: true
+    privileged: true
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:rw
+    cgroupns_mode: host
+    command: /lib/systemd/systemd
+    groups:
+      - all
+provisioner:
+  name: ansible
+  inventory:
+    group_vars:
+      all:
+        wg_address: "10.10.1.99/24"
+        wg_subnet: "10.10.1.0/24"
+        ansible_python_interpreter: /usr/bin/python3
+verifier:
+  name: ansible

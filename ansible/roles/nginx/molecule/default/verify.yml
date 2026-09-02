@@ -1,0 +1,26 @@
+---
+- name: Verify — nginx role
+  hosts: all
+  become: true
+  tasks:
+    - name: Verify nginx is installed
+      ansible.builtin.package:
+        name: nginx
+        state: present
+      check_mode: true
+      register: nginx_pkg
+      failed_when: nginx_pkg is changed
+
+    - name: Verify nginx is running
+      ansible.builtin.systemd:
+        name: nginx
+        state: started
+      check_mode: true
+      register: nginx_svc
+      failed_when: nginx_svc is changed
+
+    - name: Verify nginx responds to health check
+      ansible.builtin.uri:
+        url: http://127.0.0.1/health
+        status_code: [200]
+      register: nginx_health

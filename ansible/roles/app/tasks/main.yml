@@ -1,0 +1,220 @@
+---
+# App role — deploy the Jolarca marketplace (Django backend + Next.js frontend).
+# Uses Docker Compose for the application stack. Secrets from Vault.
+
+# ── System setup ────────────────────────────────────────────────────────
+
+- name: Create application group
+  ansible.builtin.group:
+    name: "{{ app_group }}"
+    system: true
+  tags: [app, user]
+
+- name: Create application user
+  ansible.builtin.user:
+    name: "{{ app_user }}"
+    group: "{{ app_group }}"
+    system: true
+    shell: /usr/sbin/nologin
+    home: "{{ app_dir }}"
+    create_home: false
+  tags: [app, user]
+
+- name: Create application directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ app_user }}"
+    group: "{{ app_group }}"
+    mode: "0750"
+  loop:
+    - "{{ app_dir }}"
+    - "{{ app_dir }}/app"
+    - "{{ app_dir }}/config"
+    - "{{ app_dir }}/logs"
+    - "{{ app_dir }}/static"
+    - "{{ app_dir }}/media"
+  tags: [app, dirs]
+
+# ── Docker installation ────────────────────────────────────────────────
+
+- name: Install Docker prerequisites
+  ansible.builtin.apt:
+    name:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - gnupg
+      - python3-docker
+    state: present
+  when: app_use_docker
+  tags: [app, docker]
+
+- name: Add Docker GPG key
+  ansible.builtin.get_url:
+    url: https://download.docker.com/linux/debian/gpg
+    dest: /usr/share/keyrings/docker-archive-keyring.asc
+    mode: "0644"
+  when: app_use_docker
+  tags: [app, docker]
+
+- name: Add Docker repository
+  ansible.builtin.apt_repository:
+    repo: >-
+      deb [signed-by=/usr/share/keyrings/docker-archive-keyring.asc]
+      https://download.docker.com/linux/debian
+      {{ ansible_distribution_release }} stable
+    state: present
+    filename: docker
+  when: app_use_docker
+  tags: [app, docker]
+
+- name: Install Docker
+  ansible.builtin.apt:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-compose-plugin
+    state: present
+  when: app_use_docker
+  notify: Restart docker
+  tags: [app, docker]
+
+- name: Add app user to docker group
+  ansible.builtin.user:
+    name: "{{ app_user }}"
+    groups: docker
+    append: true
+  when: app_use_docker
+  tags: [app, docker]
+
+- name: Enable and start Docker
+  ansible.builtin.systemd:
+    name: docker
+    enabled: true
+    state: started
+  when: app_use_docker
+  tags: [app, docker]
+
+# ── Application code ───────────────────────────────────────────────────
+
+- name: Clone application repository
+  ansible.builtin.git:
+    repo: "{{ app_repo }}"
+    dest: "{{ app_dir }}/app"
+    version: "{{ app_branch }}"
+    force: true
+  become_user: "{{ app_user }}"
+  notify: Restart app
+  tags: [app, code]
+
+# ── Environment configuration (from Vault, no .env files) ──────────────
+
+- name: Deploy environment configuration
+  ansible.builtin.template:
+    src: app.env.j2
+    dest: "{{ app_dir }}/config/app.env"
+    owner: "{{ app_user }}"
+    group: "{{ app_group }}"
+    mode: "0640"
+  notify: Restart app
+  no_log: true
+  tags: [app, config]
+
+# ── Docker Compose deployment ──────────────────────────────────────────
+
+- name: Deploy Docker Compose file for backend
+  ansible.builtin.template:
+    src: docker-compose.backend.yml.j2
+    dest: "{{ app_dir }}/docker-compose.backend.yml"
+    owner: "{{ app_user }}"
+    group: "{{ app_group }}"
+    mode: "0640"
+  when: app_use_docker
+  notify: Restart app
+  tags: [app, docker]
+
+- name: Deploy Docker Compose file for frontend
+  ansible.builtin.template:
+    src: docker-compose.frontend.yml.j2
+    dest: "{{ app_dir }}/docker-compose.frontend.yml"
+    owner: "{{ app_user }}"
+    group: "{{ app_group }}"
+    mode: "0640"
+  when: app_use_docker
+  notify: Restart frontend
+  tags: [app, docker]
+
+# ── Django migrations & static files ──────────────────────────────────
+
+- name: Wait for database to be reachable
+  ansible.builtin.wait_for:
+    host: "{{ db_host }}"
+    port: "{{ db_port }}"
+    timeout: 30
+  tags: [app, migrate]
+
+- name: Run Django database migrations
+  ansible.builtin.command: >
+    docker compose -f {{ app_dir }}/docker-compose.backend.yml
+    exec -T backend python manage.py migrate --noinput
+  become_user: "{{ app_user }}"
+  changed_when: true
+  when: app_use_docker
+  tags: [app, migrate]
+
+- name: Collect Django static files
+  ansible.builtin.command: >
+    docker compose -f {{ app_dir }}/docker-compose.backend.yml
+    exec -T backend python manage.py collectstatic --noinput
+  become_user: "{{ app_user }}"
+  changed_when: true
+  when: app_use_docker
+  tags: [app, static]
+
+# ── Systemd services ──────────────────────────────────────────────────
+
+- name: Deploy backend systemd service
+  ansible.builtin.template:
+    src: jol-backend.service.j2
+    dest: /etc/systemd/system/jol-backend.service
+    owner: root
+    group: root
+    mode: "0644"
+  when: app_use_docker
+  notify:
+    - Reload systemd
+    - Restart app
+  tags: [app, service]
+
+- name: Deploy frontend systemd service
+  ansible.builtin.template:
+    src: jol-frontend.service.j2
+    dest: /etc/systemd/system/jol-frontend.service
+    owner: root
+    group: root
+    mode: "0644"
+  when: app_use_docker
+  notify:
+    - Reload systemd
+    - Restart frontend
+  tags: [app, service]
+
+- name: Enable and start backend service
+  ansible.builtin.systemd:
+    name: jol-backend
+    enabled: true
+    state: started
+    daemon_reload: true
+  when: app_use_docker
+  tags: [app, service]
+
+- name: Enable and start frontend service
+  ansible.builtin.systemd:
+    name: jol-frontend
+    enabled: true
+    state: started
+    daemon_reload: true
+  when: app_use_docker
+  tags: [app, service]

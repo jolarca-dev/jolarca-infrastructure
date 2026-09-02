@@ -1,0 +1,255 @@
+---
+# Backup role — comprehensive backup for the Jolarca marketplace.
+# Covers: PostgreSQL (pg_dump + WAL archiving), MinIO, Vault, app config.
+# All backups encrypted with BorgBackup (repokey-blake2).
+
+# ── Base packages ──────────────────────────────────────────────────────
+
+- name: Install BorgBackup and dependencies
+  ansible.builtin.apt:
+    name:
+      - borgbackup
+      - python3-borgbackup
+      - postgresql-client
+    state: present
+  tags: [backup, packages]
+
+- name: Install MinIO client (mc) on backup host
+  ansible.builtin.get_url:
+    url: "https://dl.min.io/client/mc/release/linux-amd64/mc"
+    dest: /usr/local/bin/mc
+    mode: "0755"
+  when: minio_backup_enabled
+  tags: [backup, packages, minio]
+
+- name: Install Vault CLI on backup host
+  ansible.builtin.get_url:
+    url: "https://releases.hashicorp.com/vault/{{ vault_version | default('1.18.3') }}+ent/vault_{{ vault_version | default('1.18.3') }}+ent_linux_amd64.zip"
+    dest: /tmp/vault.zip
+    mode: "0644"
+  when: vault_backup_enabled
+  tags: [backup, packages, vault]
+
+- name: Extract and install Vault CLI
+  ansible.builtin.unarchive:
+    src: /tmp/vault.zip
+    dest: /usr/local/bin/
+    remote_src: true
+    creates: /usr/local/bin/vault
+  when: vault_backup_enabled
+  tags: [backup, packages, vault]
+
+- name: Create backup directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0750"
+  loop:
+    - /var/backups
+    - /var/backups/postgresql
+    - /var/backups/postgresql/wal
+    - /var/backups/minio
+    - /var/backups/vault
+    - /var/backups/app
+    - /var/backups/scripts
+  tags: [backup, dirs]
+
+# ── PostgreSQL backup (pg_dump) ───────────────────────────────────────
+
+- name: Deploy PostgreSQL backup script
+  ansible.builtin.template:
+    src: pg-backup.sh.j2
+    dest: /var/backups/scripts/pg-backup.sh
+    owner: root
+    group: root
+    mode: "0750"
+  when: pg_backup_enabled
+  tags: [backup, postgresql]
+
+- name: Deploy PostgreSQL WAL archiving script (to backup host)
+  ansible.builtin.template:
+    src: pg-wal-archive.sh.j2
+    dest: /var/backups/scripts/pg-wal-archive.sh
+    owner: root
+    group: root
+    mode: "0750"
+  when: pg_wal_archive_enabled
+  tags: [backup, postgresql, wal]
+
+- name: Deploy PostgreSQL WAL archiving script (to DB host)
+  ansible.builtin.template:
+    src: pg-wal-archive.sh.j2
+    dest: /var/backups/scripts/pg-wal-archive.sh
+    owner: root
+    group: root
+    mode: "0750"
+  delegate_to: "{{ pg_backup_host | default('10.10.1.3') }}"
+  when: pg_wal_archive_enabled
+  tags: [backup, postgresql, wal]
+
+- name: Create WAL archive directory on DB host
+  ansible.builtin.file:
+    path: /var/backups/postgresql/wal
+    state: directory
+    owner: postgres
+    group: postgres
+    mode: "0750"
+  delegate_to: "{{ pg_backup_host | default('10.10.1.3') }}"
+  when: pg_wal_archive_enabled
+  tags: [backup, postgresql, wal]
+
+- name: Schedule PostgreSQL backup cron (every 4 hours)
+  ansible.builtin.cron:
+    name: "PostgreSQL pg_dump backup"
+    minute: "30"
+    hour: "0,4,8,12,16,20"
+    job: "/var/backups/scripts/pg-backup.sh >> /var/log/borg-backup.log 2>&1"
+    user: root
+    state: present
+  when: pg_backup_enabled
+  tags: [backup, postgresql, cron]
+
+# ── MinIO backup ──────────────────────────────────────────────────────
+
+- name: Deploy MinIO backup script
+  ansible.builtin.template:
+    src: minio-backup.sh.j2
+    dest: /var/backups/scripts/minio-backup.sh
+    owner: root
+    group: root
+    mode: "0750"
+  when: minio_backup_enabled
+  tags: [backup, minio]
+
+- name: Schedule MinIO backup cron (daily)
+  ansible.builtin.cron:
+    name: "MinIO bucket backup"
+    hour: "1"
+    minute: "0"
+    job: "/var/backups/scripts/minio-backup.sh >> /var/log/borg-backup.log 2>&1"
+    user: root
+    state: present
+  when: minio_backup_enabled
+  tags: [backup, minio, cron]
+
+# ── Vault backup ──────────────────────────────────────────────────────
+
+- name: Deploy Vault snapshot backup script
+  ansible.builtin.template:
+    src: vault-backup.sh.j2
+    dest: /var/backups/scripts/vault-backup.sh
+    owner: root
+    group: root
+    mode: "0750"
+  when: vault_backup_enabled
+  tags: [backup, vault]
+
+- name: Schedule Vault backup cron (every 6 hours)
+  ansible.builtin.cron:
+    name: "Vault raft snapshot backup"
+    minute: "0"
+    hour: "0,6,12,18"
+    job: "/var/backups/scripts/vault-backup.sh >> /var/log/borg-backup.log 2>&1"
+    user: root
+    state: present
+  when: vault_backup_enabled
+  tags: [backup, vault, cron]
+
+# ── BorgBackup (main backup job) ──────────────────────────────────────
+
+- name: Deploy BorgBackup main script
+  ansible.builtin.template:
+    src: borg-backup.sh.j2
+    dest: /usr/local/bin/borg-backup.sh
+    owner: root
+    group: root
+    mode: "0750"
+  tags: [backup, borg]
+
+- name: Deploy BorgBackup prune script
+  ansible.builtin.template:
+    src: borg-prune.sh.j2
+    dest: /usr/local/bin/borg-prune.sh
+    owner: root
+    group: root
+    mode: "0750"
+  tags: [backup, borg]
+
+- name: Schedule BorgBackup daily cron
+  ansible.builtin.cron:
+    name: "BorgBackup daily"
+    hour: "{{ borg_schedule_hour }}"
+    minute: "{{ borg_schedule_minute }}"
+    job: "/usr/local/bin/borg-backup.sh >> {{ backup_log_file }} 2>&1"
+    user: "{{ borg_user }}"
+    state: present
+  tags: [backup, borg, cron]
+
+- name: Schedule BorgBackup prune (weekly)
+  ansible.builtin.cron:
+    name: "BorgBackup prune"
+    weekday: "{{ prune_schedule_weekday }}"
+    hour: "{{ prune_schedule_hour }}"
+    minute: "0"
+    job: "/usr/local/bin/borg-prune.sh >> {{ backup_log_file }} 2>&1"
+    user: "{{ borg_user }}"
+    state: present
+  tags: [backup, borg, cron]
+
+# ── Offsite sync ──────────────────────────────────────────────────────
+
+- name: Deploy offsite sync script
+  ansible.builtin.template:
+    src: borg-offsite-sync.sh.j2
+    dest: /usr/local/bin/borg-offsite-sync.sh
+    owner: root
+    group: root
+    mode: "0750"
+  when: offsite_sync_enabled
+  tags: [backup, offsite]
+
+- name: Schedule offsite sync cron
+  ansible.builtin.cron:
+    name: "BorgBackup offsite sync"
+    hour: "{{ offsite_sync_hour }}"
+    minute: "{{ offsite_sync_minute }}"
+    job: "/usr/local/bin/borg-offsite-sync.sh >> {{ backup_log_file }} 2>&1"
+    user: "{{ borg_user }}"
+    state: present
+  when: offsite_sync_enabled
+  tags: [backup, offsite, cron]
+
+# ── Monitoring ────────────────────────────────────────────────────────
+
+- name: Deploy backup monitoring script
+  ansible.builtin.template:
+    src: backup-monitor.sh.j2
+    dest: /usr/local/bin/backup-monitor.sh
+    owner: root
+    group: root
+    mode: "0750"
+  when: backup_monitoring_enabled
+  tags: [backup, monitoring]
+
+- name: Schedule backup staleness check (every hour)
+  ansible.builtin.cron:
+    name: "Backup staleness monitor"
+    minute: "15"
+    job: "/usr/local/bin/backup-monitor.sh >> {{ backup_log_file }} 2>&1"
+    user: root
+    state: present
+  when: backup_monitoring_enabled
+  tags: [backup, monitoring, cron]
+
+# ── Log rotation ──────────────────────────────────────────────────────
+
+- name: Deploy logrotate for backup logs
+  ansible.builtin.template:
+    src: borg-backup.logrotate.j2
+    dest: /etc/logrotate.d/borg-backup
+    owner: root
+    group: root
+    mode: "0644"
+  tags: [backup, logrotate]

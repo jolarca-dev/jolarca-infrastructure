@@ -1,0 +1,28 @@
+---
+- name: Verify Redis
+  hosts: all
+  become: true
+  tasks:
+    - name: Check Redis is running
+      ansible.builtin.systemd:
+        name: redis-server
+      register: redis_status
+      failed_when: redis_status.status.ActiveState != "active"
+
+    - name: Check Redis responds to PING
+      ansible.builtin.command: redis-cli -a test_password_molecule PING
+      register: ping_result
+      changed_when: false
+      failed_when: ping_result.stdout | trim != "PONG"
+
+    - name: Check Redis is bound to loopback only
+      ansible.builtin.command: ss -tlnp
+      register: ss_output
+      changed_when: false
+      failed_when: "'0.0.0.0:6379' in ss_output.stdout"
+
+    - name: Check dangerous commands are disabled
+      ansible.builtin.command: redis-cli -a test_password_molecule FLUSHALL
+      register: flush_result
+      changed_when: false
+      failed_when: "'unknown command' not in flush_result.stderr"

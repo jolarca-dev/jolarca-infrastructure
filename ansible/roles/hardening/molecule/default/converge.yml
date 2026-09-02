@@ -1,0 +1,8 @@
+---
+- name: Converge — hardening role
+  hosts: all
+  become: true
+  tasks:
+    - name: Include hardening role
+      ansible.builtin.include_role:
+        name: hardening

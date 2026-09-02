@@ -1,0 +1,17 @@
+---
+# Pinned collections — versions locked to prevent drift.
+# Update deliberately (one collection at a time, test after each).
+collections:
+  - name: ansible.posix
+    version: "1.6.2"
+  - name: community.general
+    version: "9.4.0"
+  - name: community.postgresql
+    version: "3.7.0"
+  - name: community.crypto
+    version: "2.22.3"
+
+# Pinned roles — only external roles we depend on.
+roles:
+  - name: geerlingguy.docker
+    version: "7.4.3"
