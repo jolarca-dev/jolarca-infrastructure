@@ -1,0 +1,5 @@
+# Trivy ignore list for scaffold/placeholder modules.
+# Jolarca runs on Proxmox bare metal — GKE is not deployed.
+---
+misconfig:
+  - id: GCP-0048  # GKE legacy metadata endpoints (scaffold module)
