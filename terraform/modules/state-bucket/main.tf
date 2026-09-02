@@ -105,6 +105,11 @@ resource "google_storage_bucket" "state" {
     var.labels,
   )
 
+  # CMEK ordering race (seen live in A1): bucket creation fails 403 unless
+  # the GCS service account's key grant is IN FORCE first — depend on the
+  # binding, not just the key.
+  depends_on = [google_kms_crypto_key_iam_member.gcs_service_account]
+
   lifecycle {
     prevent_destroy = true
   }
@@ -145,6 +150,9 @@ resource "google_storage_bucket" "state_logs" {
     },
     var.labels,
   )
+
+  # Same CMEK ordering race as the state bucket above.
+  depends_on = [google_kms_crypto_key_iam_member.gcs_service_account]
 
   lifecycle {
     prevent_destroy = true
