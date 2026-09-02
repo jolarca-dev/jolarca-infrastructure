@@ -97,13 +97,13 @@ resource "proxmox_virtual_environment_file" "cloud_init_config" {
 
   source_raw {
     data = templatefile("${path.module}/templates/cloud-init.yaml.tftpl", {
-      user           = var.ci_user
-      ssh_keys       = var.ci_ssh_keys
-      ip_config      = var.ci_ip_config
-      search_domain  = var.ci_search_domain
-      nameserver     = var.ci_nameserver
-      upgrade        = var.ci_upgrade
-      hostname       = var.name
+      user          = var.ci_user
+      ssh_keys      = var.ci_ssh_keys
+      ip_config     = var.ci_ip_config
+      search_domain = var.ci_search_domain
+      nameserver    = var.ci_nameserver
+      upgrade       = var.ci_upgrade
+      hostname      = var.name
     })
     file_name = "cloud-init-${var.name}.yaml"
   }

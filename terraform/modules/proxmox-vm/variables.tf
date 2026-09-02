@@ -75,9 +75,9 @@ variable "sockets" {
 variable "disks" {
   description = "List of disk configurations."
   type = list(object({
-    storage = string
-    size    = string # e.g. "20G", "100G"
-    type    = string # "scsi", "virtio", "sata"
+    storage  = string
+    size     = string # e.g. "20G", "100G"
+    type     = string # "scsi", "virtio", "sata"
     iothread = optional(bool, false)
   }))
   default = [{

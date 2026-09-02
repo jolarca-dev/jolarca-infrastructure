@@ -68,6 +68,7 @@ echo "Current backend commit: $CURRENT_BACKEND_COMMIT" | tee -a "$LOG_FILE"
 info "Phase 2: Deploying test change"
 
 # Create a test change (add a comment to a file)
+# shellcheck disable=SC2029  # date expands locally, not on the remote host
 ssh deploy@10.10.1.2 "cd /opt/jolarca/backend && echo '# rollback-test-$(date +%s)' >> manage.py && git add manage.py && git commit -m 'rollback-test: temporary change'" 2>/dev/null || {
     fail "Could not create test change"
     echo "ROLLBACK TEST FAILED — could not create test change" | tee -a "$LOG_FILE"

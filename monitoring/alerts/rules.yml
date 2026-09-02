@@ -133,7 +133,9 @@ groups:
 
       # ── Proxmox Host ──────────────────────────────────────────────
       - alert: ProxmoxHostDown
-        expr: node_uname_info{job="node_exporter"} == 0 and on(instance) label_replace(proxmox_node_info, "instance", "$1", "address", "(.+)")
+        expr: >-
+          node_uname_info{job="node_exporter"} == 0
+          and on(instance) label_replace(proxmox_node_info, "instance", "$1", "address", "(.+)")
         for: 2m
         labels:
           severity: page

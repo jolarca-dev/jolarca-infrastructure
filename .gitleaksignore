@@ -2,6 +2,9 @@
 # Each line is a gitleaks fingerprint (commit:file:rule:line).
 # Only add entries after verifying they are NOT real secrets.
 
-# sk_test_PLACEHOLDER in staging runbook — documentation placeholder, not a real key.
-# Replaced with <YOUR_STRIPE_TEST_KEY_FROM_DASHBOARD> in commit fa04192.
+# Stripe test key placeholder in staging runbook — documentation placeholder,
+# not a real key. Replaced with angle-bracket placeholder in commit fa04192.
 11a1dc72baa02eaabdda74052c104ef517b35e65:docs/staging-deployment-runbook.md:stripe-access-token:126
+
+# The ignore file itself contains the placeholder text in a comment above.
+83d40a6a492c965bc898cdb85cf8d23a020c2e22:.gitleaksignore:stripe-access-token:5

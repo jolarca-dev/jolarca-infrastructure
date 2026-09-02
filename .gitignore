@@ -63,3 +63,4 @@ ansible/inventories/**/artifacts/
 # ── Python virtual environments (tooling harness only — no runtime code) ──
 .venv/
 venv/
+tfplan-staging-bootstrap

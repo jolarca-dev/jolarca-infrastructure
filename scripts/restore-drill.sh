@@ -94,7 +94,7 @@ if [ -d "$PG_DUMP_DIR" ]; then
         check "Marketplace tables in dump" "pg_restore --list '$PG_DUMPS' | grep -qi 'table'"
 
         DUMP_SIZE=$(du -h "$PG_DUMPS" | cut -f1)
-        echo "   Latest dump: $(basename $PG_DUMPS) ($DUMP_SIZE)" | tee -a "$LOG_FILE"
+        echo "   Latest dump: $(basename "$PG_DUMPS") ($DUMP_SIZE)" | tee -a "$LOG_FILE"
     else
         warn "No PostgreSQL dumps found"
     fi
