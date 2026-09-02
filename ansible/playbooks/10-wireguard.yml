@@ -1,0 +1,21 @@
+---
+# 10-wireguard.yml — WireGuard mesh VPN setup.
+# Reference: PROXMOX_DEPLOYMENT_PLAN.md §2, security/network-policy.md
+# The WireGuard mesh is the ONLY bridge between bare metal and GCP.
+
+- name: Configure WireGuard mesh VPN
+  hosts: all
+  become: true
+  gather_facts: true
+  roles:
+    - role: wireguard
+  post_tasks:
+    - name: Verify WireGuard interface is up
+      ansible.builtin.command: wg show {{ wg_interface | default('wg0') }}
+      register: wg_status
+      changed_when: false
+      failed_when: wg_status.rc != 0
+
+    - name: Report WireGuard status
+      ansible.builtin.debug:
+        msg: "WireGuard {{ wg_interface | default('wg0') }} is active on {{ inventory_hostname }}"

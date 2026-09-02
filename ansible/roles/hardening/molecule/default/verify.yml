@@ -1,0 +1,46 @@
+---
+- name: Verify — hardening role
+  hosts: all
+  become: true
+  tasks:
+    - name: Verify SSH is configured securely
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: "^PermitRootLogin"
+        line: "PermitRootLogin no"
+      check_mode: true
+      register: ssh_root
+      failed_when: ssh_root is changed
+
+    - name: Verify nftables is installed
+      ansible.builtin.package:
+        name: nftables
+        state: present
+      check_mode: true
+      register: nftables_pkg
+      failed_when: nftables_pkg is changed
+
+    - name: Verify fail2ban is installed
+      ansible.builtin.package:
+        name: fail2ban
+        state: present
+      check_mode: true
+      register: f2b_pkg
+      failed_when: f2b_pkg is changed
+
+    - name: Verify chrony is running
+      ansible.builtin.systemd:
+        name: chrony
+        state: started
+      check_mode: true
+      register: chrony_svc
+      failed_when: chrony_svc is changed
+
+    - name: Verify umask is set
+      ansible.builtin.lineinfile:
+        path: /etc/login.defs
+        regexp: "^UMASK"
+        line: "UMASK 027"
+      check_mode: true
+      register: umask_check
+      failed_when: umask_check is changed

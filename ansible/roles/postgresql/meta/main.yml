@@ -1,0 +1,15 @@
+---
+galaxy_info:
+  role_name: postgresql
+  author: jolarca-infra
+  description: PostgreSQL 17 with PostGIS, pgvector, pgcrypto, TLS
+  license: MIT
+  min_ansible_version: "2.16"
+  platforms:
+    - name: Ubuntu
+      versions: [jammy, noble]
+    - name: Debian
+      versions: [bookworm]
+  galaxy_tags: [postgresql, database, postgis]
+dependencies:
+  - role: hardening

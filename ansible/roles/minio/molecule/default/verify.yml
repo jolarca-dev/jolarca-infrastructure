@@ -1,0 +1,16 @@
+---
+- name: Verify — minio role
+  hosts: all
+  become: true
+  tasks:
+    - name: Verify MinIO binary exists
+      ansible.builtin.stat:
+        path: /usr/local/bin/minio
+      register: minio_bin
+      failed_when: not minio_bin.stat.exists
+
+    - name: Verify MinIO data directory exists
+      ansible.builtin.stat:
+        path: /data/minio
+      register: minio_data
+      failed_when: not minio_data.stat.exists

@@ -1,0 +1,21 @@
+---
+# 30-vault.yml — HashiCorp Vault with raft, TLS, audit device.
+# Reference: PROXMOX_DEPLOYMENT_PLAN.md §3
+
+- name: Install and configure HashiCorp Vault
+  hosts: vault
+  become: true
+  gather_facts: true
+  roles:
+    - role: vault
+  post_tasks:
+    - name: Verify Vault is responding
+      ansible.builtin.uri:
+        url: "https://127.0.0.1:{{ vault_port | default(8200) }}/v1/sys/health"
+        validate_certs: false
+        status_code: [200, 429, 472, 473, 501, 503]
+      register: vault_health
+
+    - name: Report Vault status
+      ansible.builtin.debug:
+        msg: "Vault is running (HTTP {{ vault_health.status }}) on {{ inventory_hostname }}"

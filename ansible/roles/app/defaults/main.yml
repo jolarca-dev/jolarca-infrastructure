@@ -1,0 +1,47 @@
+---
+# App role defaults — Django + Next.js marketplace deployment.
+
+# ── Application ──────────────────────────────────────────────────────────
+app_user: jol
+app_group: jol
+app_dir: /opt/jolarca
+app_repo: "https://github.com/jolarca-dev/jolarca.git"
+app_branch: main
+app_env: staging
+
+# ── Django backend ──────────────────────────────────────────────────────
+django_port: 8000
+django_workers: 3
+django_timeout: 120
+django_settings_module: "project.settings"
+django_allowed_hosts:
+  - "localhost"
+  - "127.0.0.1"
+  - "10.10.1.2"
+  - "staging.journeyoflife.org"
+
+# ── Next.js frontend ───────────────────────────────────────────────────
+frontend_port: 3000
+
+# ── Celery ──────────────────────────────────────────────────────────────
+celery_worker_count: 2
+celery_log_level: INFO
+
+# ── Database ────────────────────────────────────────────────────────────
+db_host: "10.10.1.3"
+db_port: 5432
+db_name: jol_marketplace
+db_user: jol_app
+
+# ── Vault ───────────────────────────────────────────────────────────────
+vault_addr: "https://10.10.1.4:8200"
+vault_role: jol-app
+
+# ── MinIO ───────────────────────────────────────────────────────────────
+minio_endpoint: "http://10.10.1.5:9000"
+minio_media_bucket: jol-marketplace-media
+minio_uploads_bucket: jol-marketplace-uploads
+
+# ── Docker ──────────────────────────────────────────────────────────────
+app_use_docker: true
+docker_compose_version: "2.32.4"

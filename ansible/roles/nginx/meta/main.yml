@@ -1,0 +1,15 @@
+---
+galaxy_info:
+  role_name: nginx
+  author: jolarca-infra
+  description: nginx reverse proxy with security headers and rate limiting
+  license: MIT
+  min_ansible_version: "2.16"
+  platforms:
+    - name: Ubuntu
+      versions: [jammy, noble]
+    - name: Debian
+      versions: [bookworm]
+  galaxy_tags: [nginx, reverseproxy, tls]
+dependencies:
+  - role: hardening

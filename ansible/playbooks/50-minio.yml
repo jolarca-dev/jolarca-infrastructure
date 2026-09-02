@@ -1,0 +1,93 @@
+---
+# 50-minio.yml — MinIO S3-compatible object storage for staging.
+# P3 STAGING: installs MinIO, creates marketplace buckets, sets bucket
+# policies (no public access), configures TLS.
+# Reference: PROXMOX_DEPLOYMENT_PLAN.md §3
+
+- name: Install and configure MinIO for staging
+  hosts: minio
+  become: true
+  gather_facts: true
+
+  vars:
+    minio_buckets:
+      - name: jol-marketplace-media
+        policy: none  # private — no public access
+      - name: jol-marketplace-uploads
+        policy: none
+      - name: jol-marketplace-static
+        policy: none
+
+  roles:
+    - role: minio
+
+  tasks:
+    # ── Bucket creation ────────────────────────────────────────────────
+
+    - name: Wait for MinIO to be ready
+      ansible.builtin.uri:
+        url: "http://127.0.0.1:{{ minio_port | default(9000) }}/minio/health/live"
+        status_code: [200]
+      register: minio_health
+      retries: 10
+      delay: 3
+      until: minio_health is not failed
+      tags: [minio, buckets]
+
+    - name: Install mc (MinIO client)
+      ansible.builtin.get_url:
+        url: "https://dl.min.io/client/mc/release/linux-amd64/mc"
+        dest: /usr/local/bin/mc
+        mode: "0755"
+      tags: [minio, packages]
+
+    - name: Configure mc alias for local MinIO
+      ansible.builtin.command: >
+        mc alias set local
+        http://127.0.0.1:{{ minio_port | default(9000) }}
+        {{ minio_root_user | default('minioadmin') }}
+        {{ minio_root_password | default('minioadmin') }}
+      changed_when: true
+      no_log: true
+      tags: [minio, config]
+
+    - name: Create marketplace buckets
+      ansible.builtin.command: >
+        mc mb --ignore-existing local/{{ item.name }}
+      loop: "{{ minio_buckets }}"
+      loop_control:
+        label: "{{ item.name }}"
+      changed_when: true
+      tags: [minio, buckets]
+
+    - name: Set bucket policies (private — no public access)
+      ansible.builtin.command: >
+        mc anonymous set {{ item.policy | default('none') }} local/{{ item.name }}
+      loop: "{{ minio_buckets }}"
+      loop_control:
+        label: "{{ item.name }}"
+      changed_when: true
+      when: item.policy is defined and item.policy != 'none'
+      tags: [minio, buckets]
+
+    - name: Verify bucket versioning is enabled
+      ansible.builtin.command: >
+        mc version enable local/{{ item.name }}
+      loop: "{{ minio_buckets }}"
+      loop_control:
+        label: "{{ item.name }}"
+      changed_when: true
+      tags: [minio, buckets]
+
+  post_tasks:
+    - name: List buckets to verify creation
+      ansible.builtin.command: mc ls local
+      register: minio_bucket_list
+      changed_when: false
+
+    - name: Report MinIO status
+      ansible.builtin.debug:
+        msg: |
+          MinIO is running on {{ inventory_hostname }}:{{ minio_port | default(9000) }}
+          Buckets:
+          {{ minio_bucket_list.stdout }}

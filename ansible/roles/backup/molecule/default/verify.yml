@@ -1,0 +1,21 @@
+---
+- name: Verify — backup role
+  hosts: all
+  become: true
+  tasks:
+    - name: Verify BorgBackup is installed
+      ansible.builtin.command: borg --version
+      register: borg_ver
+      changed_when: false
+
+    - name: Verify backup script exists
+      ansible.builtin.stat:
+        path: /usr/local/bin/borg-backup.sh
+      register: backup_script
+      failed_when: not backup_script.stat.exists
+
+    - name: Verify backup script is executable
+      ansible.builtin.stat:
+        path: /usr/local/bin/borg-backup.sh
+      register: backup_perms
+      failed_when: not (backup_perms.stat.mode | int(base=8) | bitwise_and(0o111))

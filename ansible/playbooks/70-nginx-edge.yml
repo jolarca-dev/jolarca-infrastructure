@@ -1,0 +1,71 @@
+---
+# 70-nginx-edge.yml — nginx reverse proxy with upstream to app tier.
+# P3 STAGING: configures nginx as the edge proxy with TLS (self-signed
+# for staging), upstream to Django backend + Next.js frontend,
+# security headers, rate limiting on auth endpoints.
+# Reference: PROXMOX_DEPLOYMENT_PLAN.md §1.2, security/network-policy.md
+
+- name: Configure nginx edge proxy with app upstreams
+  hosts: edge
+  become: true
+  gather_facts: true
+
+  vars:
+    backend_upstream: "http://10.10.1.2:8000"
+    frontend_upstream: "http://10.10.1.2:3000"
+
+  roles:
+    - role: nginx
+
+  tasks:
+    # ── Generate self-signed TLS cert for staging ─────────────────────
+
+    - name: Ensure ssl-cert package is installed
+      ansible.builtin.apt:
+        name: ssl-cert
+        state: present
+      tags: [nginx, tls]
+
+    # ── Deploy marketplace server block ───────────────────────────────
+
+    - name: Deploy marketplace nginx server block
+      ansible.builtin.template:
+        src: marketplace.conf.j2
+        dest: /etc/nginx/sites-available/marketplace
+        owner: root
+        group: root
+        mode: "0644"
+      notify: Test and reload nginx
+      tags: [nginx, marketplace]
+
+    - name: Enable marketplace site
+      ansible.builtin.file:
+        src: /etc/nginx/sites-available/marketplace
+        dest: /etc/nginx/sites-enabled/marketplace
+        state: link
+      notify: Test and reload nginx
+      tags: [nginx, marketplace]
+
+    - name: Remove default site (replaced by marketplace)
+      ansible.builtin.file:
+        path: /etc/nginx/sites-enabled/default
+        state: absent
+      notify: Test and reload nginx
+      tags: [nginx, marketplace]
+
+  post_tasks:
+    - name: Verify nginx is serving marketplace
+      ansible.builtin.uri:
+        url: "https://127.0.0.1/health"
+        validate_certs: false
+        status_code: [200]
+      register: nginx_health
+      tags: [nginx, verify]
+
+    - name: Report nginx edge status
+      ansible.builtin.debug:
+        msg: |
+          nginx edge is running on {{ inventory_hostname }}
+          Backend upstream: {{ backend_upstream }}
+          Frontend upstream: {{ frontend_upstream }}
+          Health check: {{ nginx_health.status }}

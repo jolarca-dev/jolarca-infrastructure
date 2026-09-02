@@ -1,0 +1,57 @@
+# {{ ansible_managed }}
+# Docker Compose — Django backend (Gunicorn + Celery)
+name: jol-backend
+
+services:
+  backend:
+    build:
+      context: {{ app_dir }}/app/backend
+      dockerfile: Dockerfile
+    image: jol-backend:{{ app_branch }}
+    restart: unless-stopped
+    env_file: {{ app_dir }}/config/app.env
+    expose:
+      - "{{ django_port }}"
+    volumes:
+      - {{ app_dir }}/static:/app/staticfiles:ro
+      - {{ app_dir }}/media:/app/media:rw
+      - {{ app_dir }}/logs:/app/logs:rw
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:{{ django_port }}/api/v1/health/')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    networks:
+      - web
+
+  celery-worker:
+    image: jol-backend:{{ app_branch }}
+    restart: unless-stopped
+    env_file: {{ app_dir }}/config/app.env
+    command: celery -A project worker -l {{ celery_log_level }} -c {{ celery_worker_count }}
+    volumes:
+      - {{ app_dir }}/logs:/app/logs:rw
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - web
+
+  celery-beat:
+    image: jol-backend:{{ app_branch }}
+    restart: unless-stopped
+    env_file: {{ app_dir }}/config/app.env
+    command: celery -A project beat -l {{ celery_log_level }}
+    volumes:
+      - {{ app_dir }}/logs:/app/logs:rw
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - web
+
+networks:
+  web:
+    driver: bridge
+    internal: true

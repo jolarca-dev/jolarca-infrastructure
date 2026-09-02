@@ -1,0 +1,26 @@
+#!/bin/bash
+# {{ ansible_managed }}
+# BorgBackup prune — apply retention policy:
+#   daily × {{ borg_retention_daily }}, weekly × {{ borg_retention_weekly }}, monthly × {{ borg_retention_monthly }}
+set -euo pipefail
+
+export BORG_REPO="{{ borg_repo }}"
+{% if borg_passphrase %}
+export BORG_PASSPHRASE="{{ borg_passphrase }}"
+{% endif %}
+
+echo "[$(date)] Starting BorgBackup prune..."
+
+borg prune \
+  --keep-daily={{ borg_retention_daily }} \
+  --keep-weekly={{ borg_retention_weekly }} \
+  --keep-monthly={{ borg_retention_monthly }} \
+  --stats \
+  "${BORG_REPO}"
+
+echo "[$(date)] Prune completed"
+
+# Compact the repository to reclaim space
+borg compact "${BORG_REPO}" 2>/dev/null || true
+
+echo "[$(date)] Compaction completed"

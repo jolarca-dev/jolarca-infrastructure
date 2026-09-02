@@ -1,0 +1,194 @@
+---
+# Monitoring stack: Prometheus + Grafana + Alertmanager
+
+# ── Prometheus ──────────────────────────────────────────────────────
+
+- name: Create prometheus user
+  ansible.builtin.user:
+    name: prometheus
+    system: true
+    shell: /usr/sbin/nologin
+    create_home: false
+  tags: [monitoring, prometheus]
+
+- name: Create prometheus directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: prometheus
+    group: prometheus
+    mode: "0755"
+  loop:
+    - "{{ prometheus_data_dir }}"
+    - /etc/prometheus
+    - /etc/prometheus/rules
+  tags: [monitoring, prometheus]
+
+- name: Download Prometheus
+  ansible.builtin.get_url:
+    url: "https://github.com/prometheus/prometheus/releases/download/v{{ prometheus_version }}/prometheus-{{ prometheus_version }}.linux-amd64.tar.gz"
+    dest: /tmp/prometheus.tar.gz
+    mode: "0644"
+  tags: [monitoring, prometheus]
+
+- name: Extract Prometheus
+  ansible.builtin.unarchive:
+    src: /tmp/prometheus.tar.gz
+    dest: /tmp/
+    remote_src: true
+    creates: "/tmp/prometheus-{{ prometheus_version }}.linux-amd64/prometheus"
+  tags: [monitoring, prometheus]
+
+- name: Install Prometheus binaries
+  ansible.builtin.copy:
+    src: "/tmp/prometheus-{{ prometheus_version }}.linux-amd64/{{ item }}"
+    dest: "/usr/local/bin/{{ item }}"
+    owner: prometheus
+    group: prometheus
+    mode: "0755"
+    remote_src: true
+  loop:
+    - prometheus
+    - promtool
+  tags: [monitoring, prometheus]
+
+- name: Deploy Prometheus config
+  ansible.builtin.copy:
+    src: "{{ role_path }}/../../../monitoring/prometheus/prometheus.yml"
+    dest: /etc/prometheus/prometheus.yml
+    owner: prometheus
+    group: prometheus
+    mode: "0644"
+  notify: Restart prometheus
+  tags: [monitoring, prometheus]
+
+- name: Deploy alert rules
+  ansible.builtin.copy:
+    src: "{{ role_path }}/../../../monitoring/alerts/rules.yml"
+    dest: /etc/prometheus/rules/rules.yml
+    owner: prometheus
+    group: prometheus
+    mode: "0644"
+  notify: Restart prometheus
+  tags: [monitoring, prometheus]
+
+- name: Deploy Prometheus systemd unit
+  ansible.builtin.template:
+    src: prometheus.service.j2
+    dest: /etc/systemd/system/prometheus.service
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart prometheus
+  tags: [monitoring, prometheus]
+
+# ── Grafana ─────────────────────────────────────────────────────────
+
+- name: Install Grafana prerequisites
+  ansible.builtin.apt:
+    name:
+      - apt-transport-https
+      - software-properties-common
+    state: present
+  tags: [monitoring, grafana]
+
+- name: Add Grafana APT key
+  ansible.builtin.apt_key:
+    url: https://apt.grafana.com/gpg.key
+    state: present
+  tags: [monitoring, grafana]
+
+- name: Add Grafana APT repository
+  ansible.builtin.apt_repository:
+    repo: "deb https://apt.grafana.com stable main"
+    state: present
+  tags: [monitoring, grafana]
+
+- name: Install Grafana
+  ansible.builtin.apt:
+    name: grafana
+    state: present
+  tags: [monitoring, grafana]
+
+- name: Deploy Grafana dashboard
+  ansible.builtin.copy:
+    src: "{{ role_path }}/../../../monitoring/grafana/dashboards/jolarca-overview.json"
+    dest: /var/lib/grafana/dashboards/jolarca-overview.json
+    owner: grafana
+    group: grafana
+    mode: "0644"
+  notify: Restart grafana
+  tags: [monitoring, grafana]
+
+# ── Alertmanager ────────────────────────────────────────────────────
+
+- name: Create alertmanager directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: prometheus
+    group: prometheus
+    mode: "0755"
+  loop:
+    - "{{ alertmanager_data_dir }}"
+    - /etc/alertmanager
+  tags: [monitoring, alertmanager]
+
+- name: Download Alertmanager
+  ansible.builtin.get_url:
+    url: "https://github.com/prometheus/alertmanager/releases/download/v{{ alertmanager_version }}/alertmanager-{{ alertmanager_version }}.linux-amd64.tar.gz"
+    dest: /tmp/alertmanager.tar.gz
+    mode: "0644"
+  tags: [monitoring, alertmanager]
+
+- name: Extract Alertmanager
+  ansible.builtin.unarchive:
+    src: /tmp/alertmanager.tar.gz
+    dest: /tmp/
+    remote_src: true
+    creates: "/tmp/alertmanager-{{ alertmanager_version }}.linux-amd64/alertmanager"
+  tags: [monitoring, alertmanager]
+
+- name: Install Alertmanager binary
+  ansible.builtin.copy:
+    src: "/tmp/alertmanager-{{ alertmanager_version }}.linux-amd64/alertmanager"
+    dest: /usr/local/bin/alertmanager
+    owner: prometheus
+    group: prometheus
+    mode: "0755"
+    remote_src: true
+  tags: [monitoring, alertmanager]
+
+- name: Deploy Alertmanager config
+  ansible.builtin.copy:
+    src: "{{ role_path }}/../../../monitoring/alertmanager/alertmanager.yml"
+    dest: /etc/alertmanager/alertmanager.yml
+    owner: prometheus
+    group: prometheus
+    mode: "0644"
+  notify: Restart alertmanager
+  tags: [monitoring, alertmanager]
+
+- name: Deploy Alertmanager systemd unit
+  ansible.builtin.template:
+    src: alertmanager.service.j2
+    dest: /etc/systemd/system/alertmanager.service
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart alertmanager
+  tags: [monitoring, alertmanager]
+
+# ── Enable and start all services ───────────────────────────────────
+
+- name: Enable and start monitoring services
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+    enabled: true
+    state: started
+    daemon_reload: true
+  loop:
+    - prometheus
+    - grafana-server
+    - alertmanager
+  tags: [monitoring, service]

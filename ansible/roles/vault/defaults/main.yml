@@ -1,0 +1,16 @@
+---
+vault_version: "{{ vault_version | default('1.18.3') }}"
+vault_port: "{{ vault_port | default(8200) }}"
+vault_data_dir: "{{ vault_data_dir | default('/opt/vault/data') }}"
+vault_tls_dir: "{{ vault_tls_dir | default('/opt/vault/tls') }}"
+vault_config_dir: /opt/vault/config
+vault_log_dir: /var/log/vault
+vault_user: vault
+vault_group: vault
+vault_cluster_addr: "{{ vault_cluster_addr | default('https://127.0.0.1:8201') }}"
+vault_api_addr: "{{ vault_api_addr | default('https://127.0.0.1:8200') }}"
+vault_storage_type: raft
+vault_tls_cert_file: "{{ vault_tls_dir }}/cert.pem"
+vault_tls_key_file: "{{ vault_tls_dir }}/key.pem"
+vault_enable_ui: true
+vault_audit_enabled: true

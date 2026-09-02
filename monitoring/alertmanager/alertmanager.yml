@@ -1,0 +1,75 @@
+# Alertmanager configuration — routes alerts to the right channel.
+# Page on-call for data-plane down; ticket for drift/warnings.
+
+global:
+  resolve_timeout: 5m
+
+route:
+  group_by: ['alertname', 'component']
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 4h
+  receiver: 'default'
+
+  routes:
+    # Page on-call for critical (data-plane down)
+    - match:
+        severity: page
+      receiver: 'oncall-pager'
+      repeat_interval: 15m
+      continue: false
+
+    # Ticket for warnings/drift
+    - match:
+        severity: ticket
+      receiver: 'ticketing'
+      repeat_interval: 12h
+      continue: false
+
+    # Default: log and notify
+    - receiver: 'default'
+
+receivers:
+  - name: 'default'
+    webhook_configs:
+      - url: 'http://localhost:9095/webhook'  # Generic webhook for logging
+        send_resolved: true
+
+  - name: 'oncall-pager'
+    # PagerDuty integration (requires PAGERDUTY_SERVICE_KEY)
+    pagerduty_configs:
+      - service_key_file: /etc/alertmanager/pagerduty-key
+        severity: '{{ .CommonLabels.severity }}'
+        description: '{{ .CommonAnnotations.summary }}'
+        details:
+          runbook: '{{ .CommonAnnotations.runbook }}'
+          component: '{{ .CommonLabels.component }}'
+
+    # Also notify Slack for visibility
+    slack_configs:
+      - api_url_file: /etc/alertmanager/slack-webhook-url
+        channel: '#incidents'
+        title: '🚨 {{ .CommonLabels.severity | toUpper }}: {{ .CommonAnnotations.summary }}'
+        text: '{{ .CommonAnnotations.description }}\nRunbook: {{ .CommonAnnotations.runbook }}'
+        send_resolved: true
+
+  - name: 'ticketing'
+    # Create tickets for non-urgent issues
+    webhook_configs:
+      - url: 'http://localhost:9095/tickets'
+        send_resolved: true
+
+    slack_configs:
+      - api_url_file: /etc/alertmanager/slack-webhook-url
+        channel: '#infra-warnings'
+        title: '⚠️ {{ .CommonAnnotations.summary }}'
+        text: '{{ .CommonAnnotations.description }}'
+        send_resolved: true
+
+# Inhibition: if a page fires, suppress the ticket for the same alert
+inhibit_rules:
+  - source_match:
+      severity: 'page'
+    target_match:
+      severity: 'ticket'
+    equal: ['alertname', 'component']

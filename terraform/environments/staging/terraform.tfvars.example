@@ -1,0 +1,25 @@
+# Staging tfvars — NON-SECRET values only.
+# Anything credential-shaped belongs in Vaultwarden / the operator
+# environment, never here. Reviewers: reject PRs that add secrets to this
+# file (it is a CI audit target).
+
+environment = "staging"
+region      = "europe-west1"
+
+# ── GCP ──────────────────────────────────────────────────────────────────
+# project = "jolm-staging-XXXXXX"  # Fill when GCP project is created
+
+# ── Proxmox ──────────────────────────────────────────────────────────────
+# Fill these when Proxmox hardware arrives:
+# proxmox_endpoint         = "https://pve.example.com:8006"
+# proxmox_node             = "pve"
+# proxmox_template_vm_id   = 9000
+# proxmox_lxc_template     = "local:vztmpl/debian-12-standard_12.7-1_amd64.tar.zst"
+# proxmox_storage          = "local-lvm"
+# proxmox_public_bridge    = "vmbr0"
+# proxmox_wg_bridge        = "vmbr1"
+
+# SSH keys — fill with operator public keys:
+# ssh_public_keys = [
+#   "ssh-ed25519 AAAA... operator1@example.com",
+# ]

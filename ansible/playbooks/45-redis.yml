@@ -1,0 +1,44 @@
+---
+# 45-redis.yml — Redis 7.2 for Celery broker + Django cache.
+# Deploys Redis on the app host, bound to WireGuard IP only.
+# Password from Vault, dangerous commands disabled, AOF persistence.
+# Reference: PROXMOX_DEPLOYMENT_PLAN.md §3
+
+- name: Deploy Redis for Celery broker and Django cache
+  hosts: app
+  become: true
+  gather_facts: true
+  roles:
+    - role: redis
+
+  post_tasks:
+    - name: Verify Redis responds to PING
+      ansible.builtin.command: >
+        redis-cli -h {{ redis_bind | default('10.10.1.2') }}
+        -p {{ redis_port | default(6379) }}
+        -a {{ vault_redis_password | default('CHANGE_ME_FROM_VAULT') }}
+        PING
+      register: redis_ping
+      changed_when: false
+      failed_when: redis_ping.stdout | trim != "PONG"
+      no_log: true
+
+    - name: Verify Redis is bound to WireGuard IP only
+      ansible.builtin.command: ss -tlnp
+      register: ss_output
+      changed_when: false
+
+    - name: Verify Redis is NOT listening on 0.0.0.0
+      ansible.builtin.assert:
+        that:
+          - "'0.0.0.0:6379' not in ss_output.stdout"
+        fail_msg: "CRITICAL: Redis is listening on 0.0.0.0 — must bind to WireGuard IP only"
+
+    - name: Report Redis status
+      ansible.builtin.debug:
+        msg: |
+          Redis: PING → {{ redis_ping.stdout | trim }}
+          Bind: {{ redis_bind | default('10.10.1.2') }}:{{ redis_port | default(6379) }}
+          Protected mode: {{ redis_protected_mode | default('yes') }}
+          Max memory: {{ redis_maxmemory | default('256mb') }}
+          AOF: {{ redis_aof_enabled | default('yes') }} ({{ redis_aof_fsync | default('everysec') }})

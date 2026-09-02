@@ -1,0 +1,22 @@
+# {{ ansible_managed }}
+[Unit]
+Description=Jolarca Marketplace Backend (Docker Compose)
+After=docker.service network-online.target
+Requires=docker.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+User={{ app_user }}
+Group={{ app_group }}
+WorkingDirectory={{ app_dir }}
+ExecStart=/usr/bin/docker compose -f {{ app_dir }}/docker-compose.backend.yml up -d --remove-orphans
+ExecStop=/usr/bin/docker compose -f {{ app_dir }}/docker-compose.backend.yml down
+ExecReload=/usr/bin/docker compose -f {{ app_dir }}/docker-compose.backend.yml up -d --remove-orphans
+TimeoutStartSec=300
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,27 @@
+#!/bin/bash
+# {{ ansible_managed }}
+# PostgreSQL pg_dump backup — creates compressed dumps for each database.
+set -euo pipefail
+
+BACKUP_DIR="{{ pg_backup_dir }}"
+TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+RETENTION_DAYS=7
+DB_HOST="{{ pg_backup_host | default('10.10.1.3') }}"
+
+{% for db in pg_backup_databases %}
+echo "[$(date)] Backing up database: {{ db }} from ${DB_HOST}"
+pg_dump -h "${DB_HOST}" -U postgres -Fc -Z 6 \
+  -f "${BACKUP_DIR}/{{ db }}_${TIMESTAMP}.dump" \
+  "{{ db }}"
+
+# Verify the dump is valid
+pg_restore --list "${BACKUP_DIR}/{{ db }}_${TIMESTAMP}.dump" > /dev/null 2>&1 || {
+  echo "[$(date)] ERROR: pg_dump verification failed for {{ db }}"
+  exit 1
+}
+echo "[$(date)] OK: {{ db }} backed up ($(du -h ${BACKUP_DIR}/{{ db }}_${TIMESTAMP}.dump | cut -f1))"
+{% endfor %}
+
+# Remove old dumps beyond retention
+find "${BACKUP_DIR}" -name "*.dump" -mtime +${RETENTION_DAYS} -delete
+echo "[$(date)] PostgreSQL backup completed"

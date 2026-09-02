@@ -1,0 +1,188 @@
+---
+# 90-nginx-hardening.yml — Edge hardening: WAF rules, TLS 1.3,
+# structured JSON logging, Let's Encrypt (dehydrated), security headers.
+# Reference: security/network-policy.md, security/cis-baseline.md
+
+- name: Harden nginx edge proxy
+  hosts: edge
+  become: true
+  gather_facts: true
+
+  vars:
+    nginx_csp_mode: "frontend"
+    nginx_server_name: "{{ inventory_hostname }}"
+
+  roles:
+    - role: nginx
+
+  tasks:
+    # ── Deploy WAF rules ──────────────────────────────────────────────
+
+    - name: Deploy WAF rules configuration
+      ansible.builtin.template:
+        src: waf_rules.conf.j2
+        dest: /etc/nginx/conf.d/waf_rules.conf
+        owner: root
+        group: root
+        mode: "0644"
+      notify: Test and reload nginx
+      tags: [nginx, hardening, waf]
+
+    # ── Deploy hardened security headers ──────────────────────────────
+
+    - name: Deploy hardened security headers
+      ansible.builtin.template:
+        src: security_headers.conf.j2
+        dest: /etc/nginx/conf.d/security_headers.conf
+        owner: root
+        group: root
+        mode: "0644"
+      notify: Test and reload nginx
+      tags: [nginx, hardening, tls]
+
+    # ── Deploy hardened marketplace config ────────────────────────────
+
+    - name: Deploy hardened marketplace server block
+      ansible.builtin.template:
+        src: marketplace.conf.j2
+        dest: /etc/nginx/sites-available/marketplace
+        owner: root
+        group: root
+        mode: "0644"
+      notify: Test and reload nginx
+      tags: [nginx, hardening, marketplace]
+
+    # ── Install dehydrated for Let's Encrypt ──────────────────────────
+
+    - name: Install dehydrated dependencies
+      ansible.builtin.apt:
+        name:
+          - curl
+          - cron
+        state: present
+      tags: [nginx, tls, letsencrypt]
+
+    - name: Create dehydrated directories
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+      loop:
+        - /etc/dehydrated
+        - /var/www/dehydrated
+        - /var/lib/dehydrated
+        - /var/lib/dehydrated/certs
+      tags: [nginx, tls, letsencrypt]
+
+    - name: Deploy dehydrated config
+      ansible.builtin.template:
+        src: dehydrated-config.j2
+        dest: /etc/dehydrated/config
+        owner: root
+        group: root
+        mode: "0644"
+      tags: [nginx, tls, letsencrypt]
+
+    - name: Deploy dehydrated domains file
+      ansible.builtin.template:
+        src: dehydrated-domains.j2
+        dest: /etc/dehydrated/domains.txt
+        owner: root
+        group: root
+        mode: "0644"
+      tags: [nginx, tls, letsencrypt]
+
+    - name: Deploy dehydrated hook for nginx reload
+      ansible.builtin.template:
+        src: dehydrated-hook.j2
+        dest: /etc/dehydrated/hook.sh
+        owner: root
+        group: root
+        mode: "0755"
+      tags: [nginx, tls, letsencrypt]
+
+    - name: Schedule dehydrated certificate renewal (twice daily)
+      ansible.builtin.cron:
+        name: "dehydrated cert renewal"
+        minute: "0"
+        hour: "0,12"
+        job: "/usr/local/bin/dehydrated -c /etc/dehydrated/config >> /var/log/dehydrated.log 2>&1"
+        user: root
+        state: present
+      tags: [nginx, tls, letsencrypt]
+
+    # ── Hardening: disable unnecessary modules ────────────────────────
+
+    - name: Disable nginx autoindex globally
+      ansible.builtin.lineinfile:
+        path: /etc/nginx/nginx.conf
+        line: "    autoindex off;"
+        insertafter: "http {"
+        state: present
+      notify: Test and reload nginx
+      tags: [nginx, hardening]
+
+    # ── Hardening: restrict HTTP methods ──────────────────────────────
+
+    - name: Add HTTP method restriction to nginx.conf
+      ansible.builtin.blockinfile:
+        path: /etc/nginx/nginx.conf
+        marker: "# {mark} ANSIBLE MANAGED - HTTP methods"
+        insertafter: "http {"
+        block: |
+            # Only allow safe HTTP methods
+            if ($request_method !~ ^(GET|HEAD|POST|PUT|PATCH|DELETE|OPTIONS)$) {
+                return 405;
+            }
+      notify: Test and reload nginx
+      tags: [nginx, hardening]
+
+  post_tasks:
+    - name: Verify nginx configuration is valid
+      ansible.builtin.command: nginx -t
+      register: nginx_test
+      changed_when: false
+
+    - name: Verify WAF rules are loaded
+      ansible.builtin.command: grep -c "block_path_traversal" /etc/nginx/conf.d/waf_rules.conf
+      register: waf_check
+      changed_when: false
+
+    - name: Verify security headers are present
+      ansible.builtin.command: grep -c "Strict-Transport-Security" /etc/nginx/conf.d/security_headers.conf
+      register: hsts_check
+      changed_when: false
+
+    - name: Verify TLS 1.3 is configured
+      ansible.builtin.command: grep "TLSv1.3" /etc/nginx/sites-available/marketplace
+      register: tls13_check
+      changed_when: false
+
+    - name: Verify JSON logging is configured
+      ansible.builtin.command: grep "json_combined" /etc/nginx/sites-available/marketplace
+      register: json_log_check
+      changed_when: false
+
+    - name: Report hardening status
+      ansible.builtin.debug:
+        msg: |
+          nginx hardening complete:
+          - Configuration: {{ 'VALID' if nginx_test.rc == 0 else 'INVALID' }}
+          - WAF rules: {{ waf_check.stdout }} patterns loaded
+          - HSTS header: {{ 'present' if hsts_check.stdout | int > 0 else 'MISSING' }}
+          - TLS 1.3: {{ 'configured' if tls13_check.rc == 0 else 'MISSING' }}
+          - JSON logging: {{ 'configured' if json_log_check.rc == 0 else 'MISSING' }}
+          - CSP mode: {{ nginx_csp_mode }}
+          - Server name: {{ nginx_server_name }}
+
+  handlers:
+    - name: Test and reload nginx
+      ansible.builtin.command: nginx -t
+      notify: Reload nginx
+
+    - name: Reload nginx
+      ansible.builtin.systemd:
+        name: nginx
+        state: reloaded

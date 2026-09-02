@@ -1,0 +1,20 @@
+---
+pg_version: "{{ pg_version | default('17') }}"
+pg_port: "{{ pg_port | default(5432) }}"
+pg_data_dir: "{{ pg_data_dir | default('/var/lib/postgresql/' + pg_version + '/main') }}"
+pg_conf_dir: "/etc/postgresql/{{ pg_version }}/main"
+pg_extensions: "{{ pg_extensions | default(['postgis', 'postgis-3', 'pgvector']) }}"
+pg_max_connections: "{{ pg_max_connections | default(100) }}"
+pg_shared_buffers: "{{ pg_shared_buffers | default('2GB') }}"
+pg_effective_cache_size: "{{ pg_effective_cache_size | default('6GB') }}"
+pg_work_mem: "{{ pg_work_mem | default('64MB') }}"
+pg_ssl: "{{ pg_ssl | default(true) }}"
+pg_ssl_cert_file: "/etc/ssl/certs/ssl-cert-snakeoil.pem"
+pg_ssl_key_file: "/etc/ssl/private/ssl-cert-snakeoil.key"
+pg_listen_addresses: "'localhost,{{ wg_address | default('10.10.1.3') | regex_replace('/.*', '') }}'"
+pg_is_primary: "{{ pg_is_primary | default(false) }}"
+pg_databases: []
+pg_users: []
+pg_hba_entries:
+  - { type: "local", database: "all", user: "postgres", address: "", method: "peer" }
+  - { type: "hostssl", database: "all", user: "all", address: "{{ wg_subnet | default('10.10.1.0/24') }}", method: "scram-sha-256" }

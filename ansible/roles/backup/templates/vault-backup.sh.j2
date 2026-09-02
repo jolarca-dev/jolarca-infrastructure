@@ -1,0 +1,30 @@
+#!/bin/bash
+# {{ ansible_managed }}
+# Vault raft snapshot backup — creates encrypted snapshots of the raft data.
+set -euo pipefail
+
+BACKUP_DIR="{{ vault_backup_dir }}"
+TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+VAULT_ADDR="{{ vault_api_addr | default('https://10.10.1.4:8200') }}"
+
+export VAULT_ADDR
+export VAULT_SKIP_VERIFY=true  # Staging: self-signed certs
+
+# Create raft snapshot
+echo "[$(date)] Creating Vault raft snapshot..."
+vault operator raft snapshot save "${BACKUP_DIR}/vault-raft_${TIMESTAMP}.snap" 2>/dev/null || {
+  echo "[$(date)] WARNING: Vault snapshot failed (Vault may be sealed or unreachable)"
+  exit 0  # Don't fail the entire backup job
+}
+
+# Also backup the raft data directory (encrypted at rest)
+if [ -d "{{ vault_data_dir }}" ]; then
+  tar czf "${BACKUP_DIR}/vault-data_${TIMESTAMP}.tar.gz" \
+    -C "$(dirname {{ vault_data_dir }})" \
+    "$(basename {{ vault_data_dir }})" 2>/dev/null || true
+fi
+
+# Remove old snapshots (keep 7 days)
+find "${BACKUP_DIR}" -name "vault-*" -mtime +7 -delete
+
+echo "[$(date)] Vault backup completed"

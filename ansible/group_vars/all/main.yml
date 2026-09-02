@@ -1,0 +1,76 @@
+---
+# Global variables — apply to all hosts in all environments.
+# Environment-specific overrides go in inventories/<env>/group_vars/.
+# Secrets go in vault/<env>/secrets.yml (ansible-vault encrypted).
+
+# ── General ──────────────────────────────────────────────────────────────
+ntp_servers:
+  - 0.pool.ntp.org
+  - 1.pool.ntp.org
+  - 2.pool.ntp.org
+  - 3.pool.ntp.org
+
+dns_servers:
+  - 1.1.1.1
+  - 9.9.9.9
+
+# ── SSH hardening ────────────────────────────────────────────────────────
+ssh_port: 22
+ssh_permit_root_login: "no"
+ssh_password_authentication: "no"
+ssh_max_auth_tries: 3
+ssh_client_alive_interval: 300
+ssh_client_alive_count_max: 2
+
+# ── Firewall (nftables) ─────────────────────────────────────────────────
+firewall_default_policy: drop
+firewall_allowed_tcp_global:
+  - 22   # SSH
+
+# ── WireGuard mesh ──────────────────────────────────────────────────────
+wg_interface: wg0
+wg_port: 51820
+wg_subnet: 10.10.1.0/24
+wg_network: 10.10.0.0/16
+
+# ── PostgreSQL ───────────────────────────────────────────────────────────
+pg_version: "17"
+pg_port: 5432
+pg_data_dir: "/var/lib/postgresql/{{ pg_version }}/main"
+pg_extensions:
+  - postgis
+  - postgis-3
+  - pgvector
+pg_max_connections: 100
+pg_shared_buffers: "2GB"
+pg_effective_cache_size: "6GB"
+pg_work_mem: "64MB"
+pg_ssl: true
+
+# ── Vault ────────────────────────────────────────────────────────────────
+vault_version: "1.18.3"
+vault_port: 8200
+vault_data_dir: /opt/vault/data
+vault_tls_dir: /opt/vault/tls
+vault_cluster_addr: "https://{{ wg_address | default('127.0.0.1') }}:8201"
+vault_api_addr: "https://{{ wg_address | default('127.0.0.1') }}:8200"
+
+# ── MinIO ────────────────────────────────────────────────────────────────
+minio_port: 9000
+minio_console_port: 9001
+minio_data_dir: /data/minio
+minio_region: eu-central-1
+
+# ── nginx ────────────────────────────────────────────────────────────────
+nginx_worker_processes: auto
+nginx_worker_connections: 1024
+nginx_rate_limit_rps: 30
+nginx_rate_limit_burst: 50
+nginx_security_headers: true
+
+# ── Backup ───────────────────────────────────────────────────────────────
+borg_retention_daily: 7
+borg_retention_weekly: 4
+borg_retention_monthly: 12
+borg_compression: zstd,6
+borg_encryption: repokey-blake2

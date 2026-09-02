@@ -1,0 +1,242 @@
+---
+# Hardening role — CIS Ubuntu 22.04/24.04 Level 1 baseline.
+# Reference: security/cis-baseline.md
+
+- name: Update apt cache
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+  tags: [hardening, packages]
+
+- name: Install baseline packages
+  ansible.builtin.apt:
+    name:
+      - nftables
+      - fail2ban
+      - unattended-upgrades
+      - auditd
+      - audispd-plugins
+      - chrony
+      - acl
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - gnupg
+      - software-properties-common
+    state: present
+  tags: [hardening, packages]
+
+# ── SSH ──────────────────────────────────────────────────────────────────
+
+- name: Configure sshd (CIS 5.2)
+  ansible.builtin.template:
+    src: sshd_config.j2
+    dest: /etc/ssh/sshd_config
+    owner: root
+    group: root
+    mode: "0600"
+    validate: /usr/sbin/sshd -t -f %s
+  notify: Restart sshd
+  tags: [hardening, ssh]
+
+# ── nftables ─────────────────────────────────────────────────────────────
+
+- name: Configure nftables (CIS 3.5)
+  ansible.builtin.template:
+    src: nftables.conf.j2
+    dest: /etc/nftables.conf
+    owner: root
+    group: root
+    mode: "0600"
+  notify: Reload nftables
+  when: hardening_nftables_enabled
+  tags: [hardening, firewall]
+
+- name: Enable and start nftables
+  ansible.builtin.systemd:
+    name: nftables
+    enabled: true
+    state: started
+  when: hardening_nftables_enabled
+  tags: [hardening, firewall]
+
+# ── fail2ban ─────────────────────────────────────────────────────────────
+
+- name: Configure fail2ban (CIS 5.4.2)
+  ansible.builtin.template:
+    src: fail2ban_jail_local.j2
+    dest: /etc/fail2ban/jail.local
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart fail2ban
+  when: hardening_fail2ban_enabled
+  tags: [hardening, fail2ban]
+
+- name: Enable and start fail2ban
+  ansible.builtin.systemd:
+    name: fail2ban
+    enabled: true
+    state: started
+  when: hardening_fail2ban_enabled
+  tags: [hardening, fail2ban]
+
+# ── unattended-upgrades ──────────────────────────────────────────────────
+
+- name: Configure unattended-upgrades (CIS 1.9)
+  ansible.builtin.template:
+    src: 20auto-upgrades.j2
+    dest: /etc/apt/apt.conf.d/20auto-upgrades
+    owner: root
+    group: root
+    mode: "0644"
+  when: hardening_unattended_upgrades
+  tags: [hardening, updates]
+
+- name: Enable unattended-upgrades service
+  ansible.builtin.systemd:
+    name: unattended-upgrades
+    enabled: true
+    state: started
+  when: hardening_unattended_upgrades
+  tags: [hardening, updates]
+
+# ── auditd ───────────────────────────────────────────────────────────────
+
+- name: Enable and start auditd (CIS 4.1)
+  ansible.builtin.systemd:
+    name: auditd
+    enabled: true
+    state: started
+  when: hardening_auditd_enabled
+  tags: [hardening, audit]
+
+- name: Deploy auditd rules
+  ansible.builtin.template:
+    src: audit_rules.j2
+    dest: /etc/audit/rules.d/99-jolarca.rules
+    owner: root
+    group: root
+    mode: "0600"
+  notify: Reload auditd rules
+  when: hardening_auditd_enabled
+  tags: [hardening, audit]
+
+# ── sysctl ───────────────────────────────────────────────────────────────
+
+- name: Apply sysctl hardening parameters (CIS 3.1–3.4)
+  ansible.posix.sysctl:
+    name: "{{ item.key }}"
+    value: "{{ item.value }}"
+    sysctl_set: true
+    state: present
+    reload: true
+    sysctl_file: /etc/sysctl.d/99-jolarca-hardening.conf
+  loop: "{{ hardening_sysctl | dict2items }}"
+  loop_control:
+    label: "{{ item.key }}"
+  tags: [hardening, sysctl]
+
+# ── NTP (chrony) ────────────────────────────────────────────────────────
+
+- name: Configure chrony (CIS 2.2.1.1)
+  ansible.builtin.template:
+    src: chrony.conf.j2
+    dest: /etc/chrony/chrony.conf
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart chrony
+  when: hardening_chrony_enabled
+  tags: [hardening, ntp]
+
+- name: Enable and start chrony
+  ansible.builtin.systemd:
+    name: chrony
+    enabled: true
+    state: started
+  when: hardening_chrony_enabled
+  tags: [hardening, ntp]
+
+# ── Umask and login defaults ────────────────────────────────────────────
+
+- name: Set default umask (CIS 5.4.4)
+  ansible.builtin.lineinfile:
+    path: /etc/login.defs
+    regexp: "^UMASK"
+    line: "UMASK {{ hardening_umask }}"
+    state: present
+  tags: [hardening, umask]
+
+# ── Disable unused services ─────────────────────────────────────────────
+
+- name: Disable potentially unused services (CIS 2.2)
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+    enabled: false
+    state: stopped
+  loop:
+    - rsync
+    - rsh-client
+    - talk
+    - telnet
+  failed_when: false
+  tags: [hardening, services]
+
+# ── node_exporter (Prometheus metrics) ────────────────────────────────
+
+- name: Download node_exporter
+  ansible.builtin.get_url:
+    url: "https://github.com/prometheus/node_exporter/releases/download/v{{ node_exporter_version }}/node_exporter-{{ node_exporter_version }}.linux-amd64.tar.gz"
+    dest: /tmp/node_exporter.tar.gz
+    mode: "0644"
+  tags: [hardening, monitoring]
+
+- name: Extract node_exporter
+  ansible.builtin.unarchive:
+    src: /tmp/node_exporter.tar.gz
+    dest: /tmp/
+    remote_src: true
+    creates: "/tmp/node_exporter-{{ node_exporter_version }}.linux-amd64/node_exporter"
+  tags: [hardening, monitoring]
+
+- name: Install node_exporter binary
+  ansible.builtin.copy:
+    src: "/tmp/node_exporter-{{ node_exporter_version }}.linux-amd64/node_exporter"
+    dest: /usr/local/bin/node_exporter
+    owner: root
+    group: root
+    mode: "0755"
+    remote_src: true
+  tags: [hardening, monitoring]
+
+- name: Deploy node_exporter systemd unit
+  ansible.builtin.template:
+    src: node_exporter.service.j2
+    dest: /etc/systemd/system/node_exporter.service
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart node_exporter
+  tags: [hardening, monitoring]
+
+- name: Enable and start node_exporter
+  ansible.builtin.systemd:
+    name: node_exporter
+    enabled: true
+    state: started
+    daemon_reload: true
+  tags: [hardening, monitoring]
+
+# ── Internal CA certificate distribution ─────────────────────────────
+
+- name: Distribute Jolarca internal CA certificate
+  ansible.builtin.copy:
+    src: "{{ hardening_internal_ca_cert }}"
+    dest: /usr/local/share/ca-certificates/jolarca-ca.crt
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Update CA certificates
+  when: hardening_internal_ca_cert != ''
+  tags: [hardening, tls]

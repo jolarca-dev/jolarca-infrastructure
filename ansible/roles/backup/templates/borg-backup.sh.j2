@@ -1,0 +1,64 @@
+#!/bin/bash
+# {{ ansible_managed }}
+# BorgBackup main script — backs up all pre-staged backup directories.
+# Pre-backup scripts (pg_dump, MinIO mirror, Vault snapshot) run on their
+# own schedules; this script archives their output into Borg.
+set -euo pipefail
+
+export BORG_REPO="{{ borg_repo }}"
+{% if borg_passphrase %}
+export BORG_PASSPHRASE="{{ borg_passphrase }}"
+{% endif %}
+export BORG_REMOTE_PATH="{{ borg_remote_path }}"
+ARCHIVE_NAME="$(hostname)-{now:%Y-%m-%d_%H:%M:%S}"
+
+echo "[$(date)] Starting BorgBackup archive: ${ARCHIVE_NAME}"
+
+{% if pg_wal_archive_enabled %}
+# Sync WAL files from DB host before archiving
+echo "[$(date)] Syncing WAL files from {{ pg_backup_host | default('10.10.1.3') }}"
+rsync -az --timeout=30 \
+  deploy@{{ pg_backup_host | default('10.10.1.3') }}:/var/backups/postgresql/wal/ \
+  /var/backups/postgresql/wal/ 2>/dev/null || {
+  echo "[$(date)] WARNING: WAL sync from DB host failed (DB host may be unreachable)"
+}
+{% endif %}
+
+# Create the archive from all backup directories
+borg create \
+  --compression {{ borg_compression }} \
+  --stats \
+  --list \
+{% for exclude in borg_backup_exclude %}
+  --exclude '{{ exclude }}' \
+{% endfor %}
+  "${BORG_REPO}::${ARCHIVE_NAME}" \
+{% if pg_backup_enabled %}
+  /var/backups/postgresql \
+{% endif %}
+{% if minio_backup_enabled %}
+  /var/backups/minio \
+{% endif %}
+{% if vault_backup_enabled %}
+  /var/backups/vault \
+{% endif %}
+{% if app_backup_enabled %}
+{% for path in app_backup_paths %}
+  {{ path }} \
+{% endfor %}
+{% endif %}
+  /etc
+
+RESULT=$?
+
+if [ $RESULT -eq 0 ]; then
+  echo "[$(date)] ✅ BorgBackup completed successfully"
+elif [ $RESULT -eq 1 ]; then
+  echo "[$(date)] ⚠️ BorgBackup completed with warnings"
+else
+  echo "[$(date)] ❌ BorgBackup FAILED (exit code: $RESULT)"
+  exit $RESULT
+fi
+
+# Write status file for monitoring
+echo "$(date -Iseconds) ${RESULT}" > /var/backups/last-backup-status

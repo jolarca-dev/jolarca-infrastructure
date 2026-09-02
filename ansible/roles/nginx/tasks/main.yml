@@ -1,0 +1,71 @@
+---
+- name: Install nginx
+  ansible.builtin.apt:
+    name:
+      - nginx
+      - ssl-cert
+    state: present
+  tags: [nginx, packages]
+
+- name: Deploy nginx.conf
+  ansible.builtin.template:
+    src: nginx.conf.j2
+    dest: /etc/nginx/nginx.conf
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Test and reload nginx
+  tags: [nginx, config]
+
+- name: Deploy security headers snippet
+  ansible.builtin.template:
+    src: security_headers.conf.j2
+    dest: /etc/nginx/conf.d/security_headers.conf
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Test and reload nginx
+  when: nginx_security_headers
+  tags: [nginx, config]
+
+- name: Deploy rate limiting configuration
+  ansible.builtin.template:
+    src: rate_limit.conf.j2
+    dest: /etc/nginx/conf.d/rate_limit.conf
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Test and reload nginx
+  tags: [nginx, config]
+
+- name: Deploy default server block
+  ansible.builtin.template:
+    src: default.conf.j2
+    dest: /etc/nginx/sites-available/default
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Test and reload nginx
+  tags: [nginx, config]
+
+- name: Enable default site
+  ansible.builtin.file:
+    src: /etc/nginx/sites-available/default
+    dest: /etc/nginx/sites-enabled/default
+    state: link
+  notify: Test and reload nginx
+  tags: [nginx, config]
+
+- name: Remove default nginx index
+  ansible.builtin.file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+  when: false  # Keep default for now
+  tags: [nginx, config]
+
+- name: Enable and start nginx
+  ansible.builtin.systemd:
+    name: nginx
+    enabled: true
+    state: started
+  tags: [nginx, service]

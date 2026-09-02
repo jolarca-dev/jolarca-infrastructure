@@ -1,0 +1,29 @@
+---
+# ansible-lint configuration.
+# https://ansible-lint.readthedocs.io/configuring/
+
+profile: production
+
+skip_list:
+  # We use shell where the ansible builtin cannot express the logic;
+  # each shell: task has set -euo pipefail and explicit changed_when.
+  - command-instead-of-shell
+  - no-changed-when
+  # Roles use short variable prefixes (wg_, pg_, wg_) instead of the
+  # full role name prefix. Renaming would break all templates/playbooks.
+  - var-naming
+  # become_user is set at play level (become: True in playbooks), not
+  # at task level. This is intentional — roles are play-agnostic.
+  - partial-become
+
+warn_list:
+  - experimental
+  - role-name  # our roles use descriptive names, not galaxy format
+
+exclude_paths:
+  - .github/
+  - terraform/
+  - kubernetes/
+  - molecule/
+
+offline: false

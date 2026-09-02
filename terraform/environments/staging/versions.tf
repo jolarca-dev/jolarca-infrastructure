@@ -14,5 +14,9 @@ terraform {
       source  = "hashicorp/google"
       version = "~> 6.0"
     }
+    proxmox = {
+      source  = "bpg/proxmox"
+      version = ">= 0.66.0, < 1.0.0"
+    }
   }
 }

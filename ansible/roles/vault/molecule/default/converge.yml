@@ -1,0 +1,8 @@
+---
+- name: Converge — vault role
+  hosts: all
+  become: true
+  tasks:
+    - name: Include vault role
+      ansible.builtin.include_role:
+        name: vault

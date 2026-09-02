@@ -1,0 +1,8 @@
+---
+- name: Converge — backup role
+  hosts: all
+  become: true
+  tasks:
+    - name: Include backup role
+      ansible.builtin.include_role:
+        name: backup

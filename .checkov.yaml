@@ -1,0 +1,12 @@
+# Checkov skip configuration for known scaffold/placeholder modules.
+# The GKE module is a scaffold — Jolarca runs on Proxmox bare metal.
+# These skips suppress GKE-specific checks that don't apply to the
+# current architecture but would be revisited if GKE is adopted.
+skip-check:
+  # GKE scaffold — not deployed; Proxmox is the compute platform
+  - CKV_GCP_13   # GKE client certificate authentication
+  - CKV_GCP_65   # GKE RBAC via Google Groups
+  - CKV_GCP_66   # GKE Binary Authorization
+  - CKV_GCP_61   # GKE VPC Flow Logs
+  - CKV_GCP_43   # GKE KMS key rotation (scaffold)
+  - CKV_GCP_82   # GKE KMS deletion protection (scaffold)

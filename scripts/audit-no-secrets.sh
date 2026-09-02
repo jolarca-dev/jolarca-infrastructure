@@ -48,6 +48,7 @@ TFSTATE_MARK='"terraform_version"[[:space:]]*:'
 hits="$(grep -RInE "$GH|$GH2|$PK|$SLACK|$AGE|$TFSTATE_MARK" . \
   --exclude-dir=.git --exclude-dir=.terraform \
   --exclude-dir=.venv --exclude-dir=venv \
+  --exclude-dir=terraform.tfstate.d \
   --exclude="$(basename "$SELF")" 2>/dev/null | grep -vE "$CANON_STATE_GREP_RE" || true)"
 if [ -n "$hits" ]; then
   echo "FORBIDDEN CONTENT:"

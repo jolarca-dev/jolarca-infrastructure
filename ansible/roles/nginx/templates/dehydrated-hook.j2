@@ -1,0 +1,17 @@
+#!/bin/bash
+# {{ ansible_managed }}
+# dehydrated hook — reload nginx when certificates change
+set -euo pipefail
+
+case "$1" in
+    deployed_cert|deployed_chain|changed_cert)
+        echo "[$(date)] Certificate deployed for $2, reloading nginx"
+        systemctl reload nginx
+        ;;
+    startup_hook)
+        echo "[$(date)] dehydrated starting up"
+        ;;
+    exit_hook)
+        echo "[$(date)] dehydrated finished"
+        ;;
+esac

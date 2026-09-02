@@ -1,0 +1,21 @@
+# {{ ansible_managed }}
+# dehydrated configuration for Let's Encrypt
+
+BASEDIR="/var/lib/dehydrated"
+WELLKNOWN="/var/www/dehydrated"
+DOMAINS_TXT="/etc/dehydrated/domains.txt"
+HOOK="/etc/dehydrated/hook.sh"
+CONFIG_D="/etc/dehydrated/conf.d"
+
+# Use TLS-SNI-01 or HTTP-01 challenge
+CHALLENGETYPE="http-01"
+
+# Contact email for Let's Encrypt
+CONTACT_EMAIL="{{ letsencrypt_email | default('') }}"
+
+# CA URL (production)
+CA="https://acme-v02.api.letsencrypt.org/directory"
+
+# Key algorithm
+KEYSIZE="4096"
+OCSP_STAPLING="on"

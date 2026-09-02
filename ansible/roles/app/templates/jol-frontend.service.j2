@@ -1,0 +1,22 @@
+# {{ ansible_managed }}
+[Unit]
+Description=Jolarca Marketplace Frontend (Docker Compose)
+After=docker.service network-online.target jol-backend.service
+Requires=docker.service
+Wants=jol-backend.service network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+User={{ app_user }}
+Group={{ app_group }}
+WorkingDirectory={{ app_dir }}
+ExecStart=/usr/bin/docker compose -f {{ app_dir }}/docker-compose.frontend.yml up -d --remove-orphans
+ExecStop=/usr/bin/docker compose -f {{ app_dir }}/docker-compose.frontend.yml down
+ExecReload=/usr/bin/docker compose -f {{ app_dir }}/docker-compose.frontend.yml up -d --remove-orphans
+TimeoutStartSec=300
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

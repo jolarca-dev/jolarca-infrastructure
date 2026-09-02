@@ -1,0 +1,10 @@
+---
+minio_port: "{{ minio_port | default(9000) }}"
+minio_console_port: "{{ minio_console_port | default(9001) }}"
+minio_data_dir: "{{ minio_data_dir | default('/data/minio') }}"
+minio_user: minio
+minio_group: minio
+minio_region: "{{ minio_region | default('eu-central-1') }}"
+minio_root_user: "{{ minio_root_user | default('minioadmin') }}"
+minio_root_password: "{{ minio_root_password | default('minioadmin') }}"
+minio_listen_address: "0.0.0.0:{{ minio_port }}"

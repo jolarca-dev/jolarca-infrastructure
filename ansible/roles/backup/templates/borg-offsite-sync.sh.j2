@@ -1,0 +1,18 @@
+#!/bin/bash
+# {{ ansible_managed }}
+# Offsite BorgBackup sync — copies local repo to offsite target.
+# The offsite target is encrypted by Borg (repokey); the offsite provider
+# never sees plaintext.
+set -euo pipefail
+
+OFFSITE="{{ offsite_ssh_user }}@{{ offsite_ssh_host }}:{{ offsite_repo_path }}"
+
+echo "[$(date)] Starting offsite sync to ${OFFSITE}"
+
+# Sync the local Borg repo to offsite
+borg sync "${OFFSITE}" 2>/dev/null || {
+  echo "[$(date)] WARNING: Offsite sync failed (offsite host may be unreachable)"
+  exit 0  # Don't fail the entire backup job
+}
+
+echo "[$(date)] Offsite sync completed"

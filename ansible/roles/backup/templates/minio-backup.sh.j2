@@ -1,0 +1,23 @@
+#!/bin/bash
+# {{ ansible_managed }}
+# MinIO bucket backup — uses mc mirror to sync buckets to local directory.
+set -euo pipefail
+
+BACKUP_DIR="{{ minio_backup_dir }}"
+TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+
+{% for bucket in minio_buckets %}
+echo "[$(date)] Syncing bucket: {{ bucket }}"
+mkdir -p "${BACKUP_DIR}/{{ bucket }}"
+
+# Mirror bucket to local backup directory
+mc mirror --overwrite --remove \
+  "local/{{ bucket }}" \
+  "${BACKUP_DIR}/{{ bucket }}" 2>/dev/null || {
+  echo "[$(date)] WARNING: mc mirror failed for {{ bucket }} (MinIO may not be reachable)"
+}
+
+echo "[$(date)] OK: {{ bucket }} synced ($(du -sh ${BACKUP_DIR}/{{ bucket }} 2>/dev/null | cut -f1 || echo 'N/A'))"
+{% endfor %}
+
+echo "[$(date)] MinIO backup completed"

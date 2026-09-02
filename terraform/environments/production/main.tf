@@ -1,12 +1,17 @@
 # Root configuration — marketplace GitHub org baseline (production scope).
 # Compliance: ISO 27001 A.8.13, SOC 2 CC6.1/CC8.1.
 #
-# Environment naming: this directory was renamed prod/ -> production/ for
-# consistency with staging/ (see CHANGELOG.md).
+# This file manages:
+#   1. GitHub org governance (existing — live)
+#   2. Proxmox VMs/LXCs (90% plane — lands after staging validation)
+#   3. GCP resources (10% plane — lands after staging validation)
 #
 # Token handling: GITHUB_TOKEN is read from the operator's environment by the
-# provider (gh-authenticated shell). Never commit a token; secrets belong in
-# Vaultwarden, not in tfvars or state.
+# provider. Never commit a token; secrets belong in Vaultwarden, not tfvars.
+#
+# PRODUCTION DOCTRINE: Proxmox and GCP resources are commented out until
+# the staging environment has validated the modules. Uncomment and apply
+# only after staging soak is complete.
 
 terraform {
   required_version = ">= 1.6.0"
@@ -15,35 +20,25 @@ terraform {
       source  = "integrations/github"
       version = "~> 6.0"
     }
+    google = {
+      source  = "hashicorp/google"
+      version = "~> 6.0"
+    }
+    proxmox = {
+      source  = "bpg/proxmox"
+      version = ">= 0.66.0, < 1.0.0"
+    }
   }
 
-  # NO backend block here — doctrine hardened by experience (eb080bf, PR #5
-  # CI failure): any declared backend breaks `init -backend=false` CI dry
-  # plans. Remote GCS state (ADR-0003) lands in two phases:
-  #   phase A (migration window): the operator drops the gitignored overlay
-  #     zz-remote-backend.tmp.tf (`terraform { backend "gcs" {} }`) and runs
-  #     `terraform init -backend-config=bucket=... -backend-config=prefix=...
-  #     -migrate-state` (values: ../backends/production.backend.hcl).
-  #   phase B (post-migration PR): the block lands here permanently,
-  #     together with the TF_REMOTE_STATE CI flip (WIF credentials live).
-  # Procedure of record: docs/runbooks/bootstrap-state-backend.md
+  # NO backend block — doctrine hardened by experience (ADR-0003).
+  # Remote GCS state lands via the migration window procedure.
+  # Params: ../../backends/production.backend.hcl
 }
+
+# ── GitHub org governance (LIVE) ────────────────────────────────────────
 
 provider "github" {
   owner = var.org
-  # token sourced from GITHUB_TOKEN / GH_TOKEN environment — never set here
-}
-
-variable "org" {
-  description = "GitHub organization."
-  type        = string
-  default     = "journeyoflife-org"
-}
-
-variable "enable_branch_protection" {
-  description = "Two-phase bootstrap gate: run phase 1 with -var=enable_branch_protection=false, phase 2 with the default (true)."
-  type        = bool
-  default     = true
 }
 
 module "github_org" {
@@ -53,19 +48,51 @@ module "github_org" {
 
   enable_branch_protection = var.enable_branch_protection
 
-  # SOLO-ERA DEVIATION (tracked: security/key-custody.md): with a single
-  # operator, human review gates are unsatisfiable — an author can never
-  # approve their own PR, so the module defaults (1 review + CODEOWNERS
-  # reviews) would lock the sole maintainer out. Enforcement in the solo
-  # era rides on the automated gates: required status checks (ci/security)
-  # still apply, enforce_admins stays true. Raise review count to >= 1 and
-  # re-enable CODEOWNERS reviews the day the second operator onboards.
+  # SOLO-ERA DEVIATION (tracked: security/key-custody.md)
   required_approving_review_count = 0
   require_code_owner_reviews      = false
-
-  # Fleet, protection policy, and status-check contexts come from module
-  # defaults; override here only when the marketplace policy changes.
 }
+
+# ── Proxmox provider (COMMENTED — lands after staging validation) ───────
+
+# provider "proxmox" {
+#   endpoint = var.proxmox_endpoint
+#   insecure = var.proxmox_insecure
+# }
+
+# ── Proxmox VMs (COMMENTED — lands after staging validation) ────────────
+# Uncomment and apply after staging soak. VMIDs match PROXMOX_DEPLOYMENT_PLAN.md
+# but with production-appropriate sizing (higher CPU/RAM/disk).
+
+# module "edge_vm" {
+#   source = "../../modules/proxmox-vm"
+#   name   = "edge-production"
+#   vm_id  = 1000  # Production VMIDs start at 1000
+#   ...
+# }
+
+# ── GCP provider (COMMENTED — lands after staging validation) ───────────
+
+# provider "google" {
+#   project = var.project
+#   region  = var.region
+# }
+
+# ── GCP networking (COMMENTED — lands after staging validation) ─────────
+
+# module "networking" {
+#   source = "../../modules/networking"
+#   ...
+# }
+
+# ── GKE (COMMENTED — lands after staging validation) ────────────────────
+
+# module "gke" {
+#   source = "../../modules/gke"
+#   ...
+# }
+
+# ── Outputs ─────────────────────────────────────────────────────────────
 
 output "repositories" {
   value = module.github_org.repositories
@@ -73,4 +100,8 @@ output "repositories" {
 
 output "health_repo" {
   value = module.github_org.health_repo
+}
+
+output "note" {
+  value = "production: GitHub org LIVE; Proxmox + GCP modules ready but commented until staging validation completes"
 }

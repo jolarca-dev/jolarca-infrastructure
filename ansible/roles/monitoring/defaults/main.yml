@@ -1,0 +1,21 @@
+---
+prometheus_version: "2.53.0"
+grafana_version: "11.1.0"
+alertmanager_version: "0.27.0"
+
+prometheus_listen_addr: "0.0.0.0:9090"
+grafana_listen_addr: "0.0.0.0:3000"
+alertmanager_listen_addr: "0.0.0.0:9093"
+
+prometheus_data_dir: /var/lib/prometheus
+grafana_data_dir: /var/lib/grafana
+alertmanager_data_dir: /var/lib/alertmanager
+
+# WireGuard mesh IPs for scrape targets
+wg_edge_ip: "10.10.1.1"
+wg_app_ip: "10.10.1.2"
+wg_db_ip: "10.10.1.3"
+wg_vault_ip: "10.10.1.4"
+wg_minio_ip: "10.10.1.5"
+wg_monitor_ip: "10.10.1.6"
+wg_backup_ip: "10.10.1.7"

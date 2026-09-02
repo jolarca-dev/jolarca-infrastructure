@@ -23,6 +23,10 @@ terraform/backends/*.local.hcl
 # Provider credentials files
 *.tfrc
 credentials.tfrc.json
+# terraform.tfvars may contain credentials — never commit.
+# Only *.tfvars.example (placeholders) is tracked.
+*.tfvars
+!*.tfvars.example
 
 # ── Secrets & key material ────────────────────────────────────────────────
 *.pem
@@ -59,3 +63,5 @@ ansible/inventories/**/artifacts/
 # ── Python virtual environments (tooling harness only — no runtime code) ──
 .venv/
 venv/
+tfplan-staging-bootstrap
+ansible/.ansible/

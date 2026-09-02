@@ -1,0 +1,88 @@
+{
+  "dashboard": {
+    "id": null,
+    "uid": "jolarca-overview",
+    "title": "Jolarca Marketplace — Overview",
+    "tags": ["jolarca", "marketplace"],
+    "timezone": "UTC",
+    "refresh": "30s",
+    "time": {"from": "now-1h", "to": "now"},
+    "panels": [
+      {
+        "id": 1, "title": "Service Health", "type": "stat",
+        "gridPos": {"x": 0, "y": 0, "w": 24, "h": 4},
+        "targets": [
+          {"expr": "up", "legendFormat": "{{job}}"}
+        ],
+        "fieldConfig": {"defaults": {"thresholds": {"steps": [{"value": 0, "color": "red"}, {"value": 1, "color": "green"}]}}}
+      },
+      {
+        "id": 2, "title": "HTTP Request Rate (RED)", "type": "graph",
+        "gridPos": {"x": 0, "y": 4, "w": 8, "h": 8},
+        "targets": [
+          {"expr": "rate(django_http_requests_total[5m])", "legendFormat": "requests/s"}
+        ]
+      },
+      {
+        "id": 3, "title": "HTTP Error Rate (RED)", "type": "graph",
+        "gridPos": {"x": 8, "y": 4, "w": 8, "h": 8},
+        "targets": [
+          {"expr": "rate(django_http_responses_total_by_status_total{status=~\"5..\"}[5m])", "legendFormat": "5xx/s"},
+          {"expr": "rate(django_http_responses_total_by_status_total{status=~\"4..\"}[5m])", "legendFormat": "4xx/s"}
+        ]
+      },
+      {
+        "id": 4, "title": "HTTP Duration p95 (RED)", "type": "graph",
+        "gridPos": {"x": 16, "y": 4, "w": 8, "h": 8},
+        "targets": [
+          {"expr": "histogram_quantile(0.95, rate(django_http_request_duration_seconds_bucket[5m]))", "legendFormat": "p95"}
+        ]
+      },
+      {
+        "id": 5, "title": "PostgreSQL Connections", "type": "graph",
+        "gridPos": {"x": 0, "y": 12, "w": 8, "h": 8},
+        "targets": [
+          {"expr": "pg_stat_activity_count", "legendFormat": "{{datname}}"}
+        ]
+      },
+      {
+        "id": 6, "title": "Backup Age (hours)", "type": "stat",
+        "gridPos": {"x": 8, "y": 12, "w": 8, "h": 8},
+        "targets": [
+          {"expr": "(time() - backup_last_success_timestamp) / 3600", "legendFormat": "hours since last backup"}
+        ],
+        "fieldConfig": {"defaults": {"thresholds": {"steps": [{"value": 0, "color": "green"}, {"value": 20, "color": "yellow"}, {"value": 25, "color": "red"}]}}}
+      },
+      {
+        "id": 7, "title": "WireGuard Handshake Age (seconds)", "type": "graph",
+        "gridPos": {"x": 16, "y": 12, "w": 8, "h": 8},
+        "targets": [
+          {"expr": "time() - wireguard_latest_handshake_seconds", "legendFormat": "{{peer}}"}
+        ]
+      },
+      {
+        "id": 8, "title": "Vault Sealed", "type": "stat",
+        "gridPos": {"x": 0, "y": 20, "w": 6, "h": 4},
+        "targets": [
+          {"expr": "vault_sealed", "legendFormat": "sealed"}
+        ],
+        "fieldConfig": {"defaults": {"thresholds": {"steps": [{"value": 0, "color": "green"}, {"value": 1, "color": "red"}]}}}
+      },
+      {
+        "id": 9, "title": "Stripe Webhook Failures", "type": "graph",
+        "gridPos": {"x": 6, "y": 20, "w": 9, "h": 4},
+        "targets": [
+          {"expr": "rate(stripe_webhook_failures_total[15m])", "legendFormat": "failures/s"}
+        ]
+      },
+      {
+        "id": 10, "title": "TLS Certificate Expiry (days)", "type": "stat",
+        "gridPos": {"x": 15, "y": 20, "w": 9, "h": 4},
+        "targets": [
+          {"expr": "nginx_ssl_certificate_expiry_seconds / 86400", "legendFormat": "days remaining"}
+        ],
+        "fieldConfig": {"defaults": {"thresholds": {"steps": [{"value": 14, "color": "green"}, {"value": 7, "color": "yellow"}, {"value": 1, "color": "red"}]}}}
+      }
+    ]
+  }
+}

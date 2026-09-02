@@ -1,0 +1,8 @@
+---
+- name: Converge — minio role
+  hosts: all
+  become: true
+  tasks:
+    - name: Include minio role
+      ansible.builtin.include_role:
+        name: minio

@@ -1,0 +1,15 @@
+---
+galaxy_info:
+  role_name: app
+  author: jolarca-infra
+  description: Django + Next.js marketplace application deployment
+  license: MIT
+  min_ansible_version: "2.16"
+  platforms:
+    - name: Ubuntu
+      versions: [jammy, noble]
+    - name: Debian
+      versions: [bookworm]
+  galaxy_tags: [django, nextjs, marketplace, docker]
+dependencies:
+  - role: hardening

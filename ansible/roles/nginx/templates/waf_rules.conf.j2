@@ -1,0 +1,65 @@
+# {{ ansible_managed }}
+# WAF-style rules — block common attack patterns at the edge.
+# These rules reject malicious requests before they reach the application.
+
+# ── Block path traversal attempts ────────────────────────────────────
+# Matches: ../, ..\, /etc/passwd, /proc/self, etc.
+map $request_uri $block_path_traversal {
+    default         0;
+    ~*\.\.\/        1;
+    ~*\.\.\\        1;
+    ~*/etc/passwd   1;
+    ~*/etc/shadow   1;
+    ~*/proc/self    1;
+    ~*/proc/\d+     1;
+    ~*/dev/null     1;
+    ~*%2e%2e        1;  # URL-encoded ..
+    ~*%252e%252e    1;  # Double URL-encoded ..
+}
+
+# ── Block SQL injection probes in URLs ───────────────────────────────
+# Matches: UNION SELECT, OR 1=1, DROP TABLE, etc.
+map $request_uri $block_sqli {
+    default         0;
+    ~*union\s+select   1;
+    ~*union\+select    1;
+    ~*or\s+1\s*=\s*1   1;
+    ~*or\+1\+*=\+*1   1;
+    ~*drop\s+table     1;
+    ~*drop\+table      1;
+    ~*insert\s+into    1;
+    ~*delete\s+from    1;
+    ~*update\s+.*set   1;
+    ~*;\s*--           1;
+    ~*'\s*or\s+'       1;
+    ~*"\s*or\s+"       1;
+    ~*0x[0-9a-f]{8}    1;  # Hex-encoded payloads
+}
+
+# ── Block known bad user-agents ──────────────────────────────────────
+# Matches: common scanners, bots, and exploit tools
+map $http_user_agent $block_bad_ua {
+    default         0;
+    ~*sqlmap        1;
+    ~*nikto         1;
+    ~*nmap          1;
+    ~*masscan       1;
+    ~*dirbuster     1;
+    ~*gobuster      1;
+    ~*wfuzz         1;
+    ~*burpsuite     1;
+    ~*nessus        1;
+    ~*openvas       1;
+    ~*havij         1;
+    ~*zgrab         1;
+    ~*python-requests 0;  # Allow legitimate API clients
+    ~*curl          0;    # Allow curl for health checks
+    ""              1;    # Block empty user-agents (most scanners)
+}
+
+# ── Block requests with suspicious content types ─────────────────────
+map $content_type $block_bad_content {
+    default         0;
+    ~*text/xml      1;    # XXE probe vector (unless API needs it)
+    ~*application/soap+xml  1;
+}

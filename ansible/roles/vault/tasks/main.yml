@@ -1,0 +1,104 @@
+---
+- name: Install Vault prerequisites
+  ansible.builtin.apt:
+    name:
+      - gnupg
+      - curl
+      - unzip
+    state: present
+  tags: [vault, packages]
+
+- name: Add HashiCorp APT repository key
+  ansible.builtin.get_url:
+    url: https://apt.releases.hashicorp.com/gpg
+    dest: /usr/share/keyrings/hashicorp-archive-keyring.asc
+    mode: "0644"
+  tags: [vault, packages]
+
+- name: Add HashiCorp APT repository
+  ansible.builtin.apt_repository:
+    repo: "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.asc] https://apt.releases.hashicorp.com {{ ansible_distribution_release }} main"
+    state: present
+    filename: hashicorp
+  tags: [vault, packages]
+
+- name: Install Vault
+  ansible.builtin.apt:
+    name: "vault={{ vault_version }}-*"
+    state: present
+    update_cache: true
+  tags: [vault, packages]
+
+- name: Create Vault directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ vault_user }}"
+    group: "{{ vault_group }}"
+    mode: "0750"
+  loop:
+    - "{{ vault_data_dir }}"
+    - "{{ vault_config_dir }}"
+    - "{{ vault_tls_dir }}"
+    - "{{ vault_log_dir }}"
+  tags: [vault, config]
+
+- name: Generate self-signed TLS certificate for Vault
+  ansible.builtin.command: >
+    openssl req -x509 -newkey rsa:4096 -sha256 -days 365 -nodes
+    -keyout {{ vault_tls_key_file }}
+    -out {{ vault_tls_cert_file }}
+    -subj "/CN={{ inventory_hostname }}"
+    -addext "subjectAltName=DNS:{{ inventory_hostname }},IP:{{ wg_address | default('127.0.0.1') | regex_replace('/.*', '') }}"
+  args:
+    creates: "{{ vault_tls_cert_file }}"
+  notify: Restart vault
+  tags: [vault, tls]
+
+- name: Set TLS key permissions
+  ansible.builtin.file:
+    path: "{{ vault_tls_key_file }}"
+    owner: "{{ vault_user }}"
+    group: "{{ vault_group }}"
+    mode: "0600"
+  tags: [vault, tls]
+
+- name: Deploy Vault configuration
+  ansible.builtin.template:
+    src: vault.hcl.j2
+    dest: "{{ vault_config_dir }}/vault.hcl"
+    owner: "{{ vault_user }}"
+    group: "{{ vault_group }}"
+    mode: "0640"
+  notify: Restart vault
+  tags: [vault, config]
+
+- name: Deploy Vault systemd override
+  ansible.builtin.template:
+    src: vault.service.j2
+    dest: /etc/systemd/system/vault.service
+    owner: root
+    group: root
+    mode: "0644"
+  notify:
+    - Reload systemd
+    - Restart vault
+  tags: [vault, service]
+
+- name: Enable and start Vault
+  ansible.builtin.systemd:
+    name: vault
+    enabled: true
+    state: started
+  tags: [vault, service]
+
+- name: Wait for Vault to be ready
+  ansible.builtin.uri:
+    url: "{{ vault_api_addr }}/v1/sys/health"
+    validate_certs: false
+    status_code: [200, 429, 472, 473, 501, 503]
+  register: vault_health
+  retries: 10
+  delay: 3
+  until: vault_health is not failed
+  tags: [vault, verify]

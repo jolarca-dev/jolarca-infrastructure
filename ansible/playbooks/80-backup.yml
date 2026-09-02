@@ -1,0 +1,101 @@
+---
+# 80-backup.yml — Comprehensive backup deployment (P4).
+# Deploys BorgBackup with PostgreSQL WAL archiving, MinIO bucket sync,
+# Vault raft snapshots, app config backup, offsite sync, and monitoring.
+# Reference: PROXMOX_DEPLOYMENT_PLAN.md §4, backup/borg/offsite-repo.md
+
+- name: Deploy comprehensive backup system
+  hosts: backup
+  become: true
+  gather_facts: true
+
+  vars:
+    borg_repo: "/var/backups/borg-repo"
+
+  roles:
+    - role: backup
+
+  tasks:
+    # ── Initialize Borg repository (first time) ─────────────────────
+
+    - name: Check if Borg repository exists
+      ansible.builtin.stat:
+        path: /var/backups/borg-repo
+      register: borg_repo_stat
+      tags: [backup, init]
+
+    - name: Initialize Borg repository
+      ansible.builtin.command: >
+        borg init --encryption={{ borg_encryption }}
+        {{ borg_repo }}
+      when: not borg_repo_stat.stat.exists
+      changed_when: true
+      environment:
+        BORG_PASSPHRASE: "{{ borg_passphrase | default('') }}"
+      tags: [backup, init]
+
+    # ── Run initial backup ──────────────────────────────────────────
+
+    - name: Configure PostgreSQL WAL archiving on DB host
+      ansible.builtin.lineinfile:
+        path: "/etc/postgresql/{{ pg_version | default('17') }}/main/conf.d/99-jolarca.conf"
+        line: "{{ item }}"
+        state: present
+      loop:
+        - "wal_level = replica"
+        - "archive_mode = on"
+        - "archive_command = '/var/backups/scripts/pg-wal-archive.sh %p %f'"
+        - "archive_timeout = {{ pg_wal_archive_timeout | default(300) }}"
+      delegate_to: "{{ pg_backup_host | default('10.10.1.3') }}"
+      when: pg_wal_archive_enabled
+      notify: "Restart postgresql on DB host"
+      tags: [backup, postgresql, wal]
+
+    - name: Run initial PostgreSQL backup
+      ansible.builtin.command: /var/backups/scripts/pg-backup.sh
+      changed_when: true
+      when: pg_backup_enabled
+      tags: [backup, initial]
+
+    - name: Run initial BorgBackup
+      ansible.builtin.command: /usr/local/bin/borg-backup.sh
+      changed_when: true
+      tags: [backup, initial]
+
+  post_tasks:
+    - name: Verify BorgBackup is installed
+      ansible.builtin.command: borg --version
+      register: borg_version
+      changed_when: false
+
+    - name: Verify backup scripts exist
+      ansible.builtin.stat:
+        path: "{{ item }}"
+      loop:
+        - /usr/local/bin/borg-backup.sh
+        - /usr/local/bin/borg-prune.sh
+        - /var/backups/scripts/pg-backup.sh
+        - /var/backups/scripts/minio-backup.sh
+        - /var/backups/scripts/vault-backup.sh
+      register: script_checks
+
+    - name: Report backup status
+      ansible.builtin.debug:
+        msg: |
+          BorgBackup: {{ borg_version.stdout }}
+          Repository: {{ borg_repo }}
+          Encryption: {{ borg_encryption }}
+          Retention: daily×{{ borg_retention_daily }}, weekly×{{ borg_retention_weekly }}, monthly×{{ borg_retention_monthly }}
+          PostgreSQL backup: {{ 'enabled' if pg_backup_enabled else 'disabled' }}
+          PostgreSQL WAL archiving: {{ 'enabled' if pg_wal_archive_enabled else 'disabled' }}
+          MinIO backup: {{ 'enabled' if minio_backup_enabled else 'disabled' }}
+          Vault backup: {{ 'enabled' if vault_backup_enabled else 'disabled' }}
+          Offsite sync: {{ 'enabled' if offsite_sync_enabled else 'disabled' }}
+          Monitoring: {{ 'enabled' if backup_monitoring_enabled else 'disabled' }}
+
+  handlers:
+    - name: Restart postgresql on DB host
+      ansible.builtin.systemd:
+        name: postgresql
+        state: restarted
+      delegate_to: "{{ pg_backup_host | default('10.10.1.3') }}"

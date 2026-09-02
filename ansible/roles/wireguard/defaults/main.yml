@@ -1,0 +1,14 @@
+---
+wg_interface_name: "{{ wg_interface | default('wg0') }}"
+wg_listen_port: "{{ wg_port | default(51820) }}"
+wg_address: "{{ wg_address | default('10.10.1.0/24') }}"
+wg_peers: []
+# wg_peers example:
+#   - name: edge-staging
+#     public_key: "abc123..."
+#     allowed_ips: "10.10.1.1/32"
+#     endpoint: "10.10.1.1:51820"  # optional, for initial peers
+wg_private_key: ""  # Injected from vault at deploy time
+wg_preshared_key: ""  # Optional
+wg_dns: ""
+wg_mtu: 1420

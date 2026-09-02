@@ -1,0 +1,54 @@
+#cloud-config
+# Cloud-init configuration for Proxmox VM — managed by Terraform.
+# Do not edit manually; changes will be overwritten on next apply.
+
+hostname: ${hostname}
+manage_etc_hosts: true
+
+users:
+  - name: ${user}
+    groups: [sudo]
+    shell: /bin/bash
+    sudo: ["ALL=(ALL) NOPASSWD:ALL"]
+    lock_passwd: true
+    ssh_authorized_keys:
+%{ for key in ssh_keys ~}
+      - ${key}
+%{ endfor ~}
+
+%{ if length(ip_config) > 0 ~}
+network:
+  version: 2
+  ethernets:
+%{ for idx, ip in ip_config ~}
+    eth${idx}:
+%{ if can(regex("^ip=dhcp", ip)) ~}
+      dhcp4: true
+%{ else ~}
+      addresses:
+        - ${replace(regex("^ip=([^,]+)", ip), "$${0}", "$$1")}
+%{ if can(regex("gw=", ip)) ~}
+      routes:
+        - to: default
+          via: ${replace(regex("gw=([^,]+)", ip), "$${0}", "$$1")}
+%{ endif ~}
+%{ endif ~}
+%{ if nameserver != "" ~}
+      nameservers:
+        addresses: [${nameserver}]
+%{ endif ~}
+%{ if search_domain != "" ~}
+        search: [${search_domain}]
+%{ endif ~}
+%{ endfor ~}
+%{ endif ~}
+
+%{ if upgrade ~}
+package_update: true
+package_upgrade: true
+%{ endif ~}
+
+# Enable QEMU guest agent
+runcmd:
+  - systemctl enable qemu-guest-agent
+  - systemctl start qemu-guest-agent

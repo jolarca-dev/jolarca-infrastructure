@@ -1,0 +1,64 @@
+#!/usr/sbin/nft -f
+# {{ ansible_managed }}
+# nftables configuration — default-deny inbound (security/network-policy.md)
+
+flush ruleset
+
+table inet filter {
+  chain input {
+    type filter hook input priority 0; policy {{ hardening_nftables_default_input }};
+
+    # Allow established/related connections
+    ct state established,related accept
+
+    # Allow loopback
+    iifname "lo" accept
+
+    # Drop invalid
+    ct state invalid counter drop
+
+    # Allow ICMP (ping, path MTU discovery)
+    ip protocol icmp icmp type {
+      echo-request, echo-reply, destination-unreachable,
+      time-exceeded, parameter-problem
+    } accept
+
+    # Allow ICMPv6
+    ip6 nexthdr icmpv6 accept
+
+    # Allow SSH
+    tcp dport {{ hardening_ssh_port }} ct state new limit rate over 10/minute burst 5 packets accept
+
+{% for port in hardening_nftables_allowed_tcp %}
+{% if port != 22 %}
+    # Allowed TCP port {{ port }}
+    tcp dport {{ port }} accept
+{% endif %}
+{% endfor %}
+
+{% for port in hardening_nftables_allowed_udp %}
+    # Allowed UDP port {{ port }}
+    udp dport {{ port }} accept
+{% endfor %}
+
+    # Log and drop everything else
+    counter log prefix "nft-input-deny: " drop
+  }
+
+  chain forward {
+    type filter hook forward priority 0; policy {{ hardening_nftables_default_forward }};
+
+    # Allow established/related
+    ct state established,related accept
+
+    # Allow WireGuard forwarding
+    iifname "wg0" accept
+    oifname "wg0" accept
+
+    counter log prefix "nft-forward-deny: " drop
+  }
+
+  chain output {
+    type filter hook output priority 0; policy accept;
+  }
+}

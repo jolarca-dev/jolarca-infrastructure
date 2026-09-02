@@ -1,0 +1,54 @@
+---
+- name: Install WireGuard packages
+  ansible.builtin.apt:
+    name:
+      - wireguard
+      - wireguard-tools
+    state: present
+  tags: [wireguard, packages]
+
+- name: Enable IP forwarding
+  ansible.posix.sysctl:
+    name: net.ipv4.ip_forward
+    value: "1"
+    sysctl_set: true
+    state: present
+    reload: true
+    sysctl_file: /etc/sysctl.d/99-wireguard.conf
+  tags: [wireguard, sysctl]
+
+- name: Generate WireGuard private key (if not provided)
+  ansible.builtin.shell: |
+    set -euo pipefail
+    umask 077
+    wg genkey
+  args:
+    executable: /bin/bash
+  register: wg_generated_key
+  changed_when: false
+  when: wg_private_key | length == 0
+  no_log: true
+  tags: [wireguard, keys]
+
+- name: Set WireGuard private key fact
+  ansible.builtin.set_fact:
+    wg_effective_private_key: "{{ wg_private_key if wg_private_key | length > 0 else wg_generated_key.stdout }}"
+  no_log: true
+  tags: [wireguard, keys]
+
+- name: Deploy WireGuard configuration
+  ansible.builtin.template:
+    src: wg0.conf.j2
+    dest: "/etc/wireguard/{{ wg_interface_name }}.conf"
+    owner: root
+    group: root
+    mode: "0600"
+  notify: Restart wireguard
+  tags: [wireguard, config]
+
+- name: Enable and start WireGuard interface
+  ansible.builtin.systemd:
+    name: "wg-quick@{{ wg_interface_name }}"
+    enabled: true
+    state: started
+  tags: [wireguard, service]

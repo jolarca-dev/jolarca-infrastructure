@@ -1,0 +1,45 @@
+# {{ ansible_managed }}
+# Redis configuration — secure, Vault-fed, cache/queue use.
+
+# Network
+bind {{ redis_bind }}
+port {{ redis_port }}
+protected-mode {{ redis_protected_mode }}
+tcp-backlog 511
+timeout 0
+tcp-keepalive 300
+
+# Authentication
+requirepass {{ redis_password }}
+
+# Memory
+maxmemory {{ redis_maxmemory }}
+maxmemory-policy {{ redis_maxmemory_policy }}
+
+# Persistence — AOF for Celery broker reliability
+{% if redis_aof_enabled == "yes" %}
+appendonly yes
+appendfilename "appendonly.aof"
+appendfsync {{ redis_aof_fsync }}
+{% endif %}
+{% if redis_rdb_save %}
+save {{ redis_rdb_save }}
+{% endif %}
+
+# Logging
+loglevel notice
+logfile /var/log/redis/redis-server.log
+
+# Security — disable dangerous commands
+{% for cmd in redis_disabled_commands %}
+rename-command {{ cmd }} ""
+{% endfor %}
+
+# TLS (disabled until internal CA certs deployed)
+{% if redis_tls_enabled %}
+tls-port {{ redis_tls_port }}
+tls-cert-file /etc/redis/tls/redis.crt
+tls-key-file /etc/redis/tls/redis.key
+tls-ca-cert-file /etc/ssl/certs/jolarca-ca.pem
+tls-auth-clients no
+{% endif %}
