@@ -45,7 +45,7 @@ jobs:
           scan-ref: terraform
           exit-code: "1"
           severity: HIGH,CRITICAL
-          ignore-files: "terraform/.trivyignore"
+          trivyignores: "terraform/.trivyignore"
 
       - name: Install Conftest
         run: |
