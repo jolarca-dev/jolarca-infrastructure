@@ -1,0 +1,3 @@
+# Trivy ignore: GKE scaffold module findings.
+# Jolarca runs on Proxmox bare metal — GKE is not deployed.
+GCP-0048
