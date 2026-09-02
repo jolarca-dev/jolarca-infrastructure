@@ -64,3 +64,4 @@ ansible/inventories/**/artifacts/
 .venv/
 venv/
 tfplan-staging-bootstrap
+ansible/.ansible/
