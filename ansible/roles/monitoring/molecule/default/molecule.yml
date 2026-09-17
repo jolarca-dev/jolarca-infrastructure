@@ -16,6 +16,6 @@ platforms:
 provisioner:
   name: ansible
   roles_path:
-    - ../../
+    - ../../../
 verifier:
   name: ansible
