@@ -272,9 +272,12 @@ Rollback:
 
 ### Finding
 
-**The deployment infrastructure is fully implemented as executable code.** All 10 Ansible
-roles and 11 playbooks exist. The sole remaining gap is physical hardware. Once Proxmox
-arrives, the 3-day staging milestone is achievable with zero additional development.
+**The deployment infrastructure exists as source, not as code known to run.** All 10
+Ansible roles and 11 playbooks exist, but five of them (postgresql, minio, vault,
+nginx, wireguard) abort during variable resolution, before contacting a host, because
+they declare unresolvable defaults — see BLOCKERS.md B16. Physical hardware is not the
+sole remaining gap: B16 and B17 must close first, otherwise Day 2 of the staging plan
+fails at the first templated task.
 
 ---
 
@@ -305,34 +308,39 @@ i.SAF obligation is registered. **VIES is not wired to the live EU gateway** —
 
 ---
 
-## Gap Summary (Updated 2026-09-10)
+## Gap Summary (Updated 2026-09-17)
 
 | Gap | Severity | Blocks Production? | Blocks Staging? | Status |
 |-----|----------|--------------------|-----------------|---------|
+| B16: 5 roles declare unresolvable defaults | Critical | ✅ YES | ✅ YES | ❌ Open — found 2026-09-17 |
+| B17: Molecule never executes in CI | Critical | ✅ YES | ✅ YES | ❌ Open — found 2026-09-17 |
 | Proxmox hardware not delivered | Critical | ✅ YES | ✅ YES | ❌ Pending |
 | ~~PostgreSQL version mismatch (16 vs 17)~~ | ~~Critical~~ | — | — | ✅ RESOLVED (app repo updated to PG 17) |
-| ~~Deployment model unreconciled~~ | ~~High~~ | — | — | ✅ RESOLVED (ADR-0007 + app_deploy_mode) |
+| ~~Deployment model unreconciled~~ | ~~High~~ | — | — | ✅ RESOLVED (ADR-0007 + app_deploy_mode, defects fixed) |
 | Restore drill never executed | Critical | ✅ YES | No | ❌ Needs hardware |
 | DPIA-003 unsigned | Critical | ✅ YES | No | ❌ Needs DPO |
 | VIES not wired (format-only) | High | ✅ YES (B2B) | No | ❌ Needs dev |
 | CodeQL/SAST disabled | High | No (risk-accept) | No | ❌ Needs enablement |
 | OSS registration incomplete | Medium | ✅ YES (B2C EU) | No | ❌ Needs VMI |
-| ~~Ansible roles empty~~ | ~~Critical~~ | — | — | ✅ RESOLVED |
-| ~~Backups not implemented~~ | ~~Critical~~ | — | — | ✅ RESOLVED (code) |
-| ~~No TLS/nginx edge~~ | ~~Critical~~ | — | — | ✅ RESOLVED (code) |
-| ~~No Vault bootstrap~~ | ~~Critical~~ | — | — | ✅ RESOLVED (code) |
-| ~~No WireGuard playbook~~ | ~~Critical~~ | — | — | ✅ RESOLVED (code) |
-| ~~No monitoring/alerting~~ | ~~High~~ | — | — | ✅ RESOLVED (code) |
+| ~~Ansible roles empty~~ | ~~Critical~~ | — | — | ⚠️ Source written; 5/10 blocked by B16 |
+| ~~Backups not implemented~~ | ~~Critical~~ | — | — | ⚠️ Code exists; unrunnable-by-dependency (B16 vault/postgresql) and never executed |
+| ~~No TLS/nginx edge~~ | ~~Critical~~ | — | — | ⚠️ Code exists; nginx role blocked by B16 |
+| ~~No Vault bootstrap~~ | ~~Critical~~ | — | — | ⚠️ Code exists; vault role blocked by B16 |
+| ~~No WireGuard playbook~~ | ~~Critical~~ | — | — | ⚠️ Code exists; wireguard role blocked by B16 |
+| ~~No monitoring/alerting~~ | ~~High~~ | — | — | ⚠️ Code exists; defaults resolve, but never executed |
 
 ---
 
 ## Earliest Honest Production Date
 
-Given that all infrastructure code is now implemented, the timeline is:
+Given that the infrastructure code is written but five roles are known not to run
+(B16), the timeline is:
 
+- **B16 + B17 remediation (1 day, no hardware needed):** rewrite 28 defaults; fix the molecule working-directory; land one green `molecule test` per role
 - **Staging (3 days from hardware arrival):** Proxmox install → VMs → run all playbooks → smoke tests
 - **Production (3–4 weeks from hardware arrival):** Staging soak (7d) + restore drill + DPIA + VIES + CodeQL
 
-The previous estimate of 4–6 weeks assumed 2–3 weeks of Ansible development.
-That work is done. The critical path is now: **hardware delivery → 3-day staging →
-7-day soak → parallel compliance workstreams → production cutover.**
+The previous estimate of 4–6 weeks assumed 2–3 weeks of Ansible development. Most of
+that authoring is done; what remains is proving it executes. The critical path is now:
+**B16/B17 → hardware delivery → 3-day staging → 7-day soak → parallel compliance
+workstreams → production cutover.**

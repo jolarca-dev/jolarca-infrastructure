@@ -1,7 +1,7 @@
 # BLOCKERS — jolarca-marketplace deployment
 
-**Date:** 2026-09-10 (updated from 2026-09-02)  
-**Context:** Proxmox hardware pending delivery. All Ansible roles and playbooks are now implemented.  
+**Date:** 2026-09-17 (supersedes 2026-09-10 / 2026-09-02)  
+**Context:** Proxmox hardware pending delivery. Ansible roles and playbooks are written as source, but five of ten roles currently fail before contacting a host because they declare unresolvable defaults (B16), and the Molecule suite that would have shown this has never executed (B17).  
 **Rule:** Every gap between current state and deployment gate, with owner + effort estimate.
 
 ---
