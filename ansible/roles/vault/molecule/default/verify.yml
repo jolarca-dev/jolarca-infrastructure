@@ -7,4 +7,4 @@
       ansible.builtin.command: vault version
       register: vault_ver
       changed_when: false
-      failed_when: "Vault not in vault_ver.stdout"
+      failed_when: "'Vault' not in vault_ver.stdout"

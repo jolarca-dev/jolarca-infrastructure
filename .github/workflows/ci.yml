@@ -22,6 +22,12 @@ jobs:
           yamllint -d "$YAMLLINT_CFG" \
             .github/ backup/ monitoring/ .pre-commit-config.yaml qodana.yaml
 
+      # Parse-only gate for the ansible tree. yamllint above does not cover
+      # ansible/, and the ansible workflow only syntax-checks playbooks, so
+      # role/molecule YAML had no parser in any required check.
+      - name: Parse every ansible YAML file
+        run: python3 scripts/check-ansible-yaml.py
+
       - name: Shellcheck operator scripts
         run: |
           sudo apt-get update -qq && sudo apt-get install -y -qq shellcheck

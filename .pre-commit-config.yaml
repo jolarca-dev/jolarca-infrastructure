@@ -49,3 +49,24 @@ repos:
         # Workstream pending: hook stays defined so it activates the moment
         # ansible playbooks land. Fails only on ansible files.
         files: '^ansible/.*\.(yml|yaml)$'
+        # The upstream hook ships `always_run: true` + `pass_filenames: false`,
+        # which makes the `files` filter above inert: it linted the whole tree
+        # on every commit, so it blocked unrelated commits and — because the
+        # tree carries debt it was never meant to judge — no commit touching
+        # ansible/ was possible at all. Override to match the stated intent.
+        # Full-tree lint stays the ansible workflow's job; the required `ci`
+        # context gained a parse gate over ansible/ for everyone's benefit.
+        always_run: false
+        pass_filenames: true
+        # Load the project's own ansible-lint config. pre-commit runs the hook
+        # from the repo root, so ansible/.ansible-lint is never discovered
+        # automatically and its skip_list (var-naming, partial-become,
+        # no-changed-when) and exclude_paths (molecule/, terraform/,
+        # kubernetes/, .github/) silently vanished — 188 spurious failures, most
+        # from gitignored vendored Galaxy roles under ansible/.ansible/. Pointing
+        # at the config and the ansible project dir reproduces CI's verdict.
+        args:
+          - -c
+          - ansible/.ansible-lint
+          - --project-dir
+          - ansible
