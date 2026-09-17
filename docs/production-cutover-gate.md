@@ -24,7 +24,7 @@ acceptance from the DPO and infrastructure lead.
 | C5 | TLS | Certificate auto-renewal (dehydrated) working | 🔴 Pending | Infra | `dehydrated -c /etc/dehydrated/config --force` |
 | C6 | DPIA | DPIA-003 signed by DPO, hash-pinned | 🔴 Pending | DPO | `jolarca-compliance/dpia/003-payments-and-vat/dpia.md` |
 | C7 | VIES | VIES live validation working (not format-only) | 🔴 Pending | Backend | `POST /api/v1/tax/vat-id/validate/` with `vies_checked: true` |
-| C8 | Security | CodeQL + Trivy green on all repos (no disabled-by-default) | ✅ Done | Infra | `jolarca/.github/workflows/security.yml` |
+| C8 | Security | CodeQL + Trivy green on all repos (no disabled-by-default) | 🔴 Pending | Infra | **Verified 2026-09-17 — this was recorded as Done in error.** CodeQL is active in 1/5 repos (only `jolarca-data`); `jolarca-infrastructure` still carries `.github/workflows/codeql.yml.disabled`; the `jolarca` `Security` workflow is red on current `main` (run 34831245242, sha `6fe64bf`, and the 4 runs before it). Tracked as BLOCKERS.md B9. |
 | C9 | Security | No plaintext secrets in any repo (Gitleaks clean) | ✅ Done | Infra | Gitleaks configured in pre-commit + CI (`security-scan.yml`) in all repos |
 | **High Blockers** | | | | | |
 | H1 | Monitoring | Prometheus scraping all services | 🔴 Pending | Infra | `curl http://10.10.1.6:9090/api/v1/targets` |

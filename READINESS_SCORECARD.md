@@ -1,6 +1,6 @@
 # READINESS SCORECARD — jolarca-marketplace
 
-**Date:** 2026-09-10  
+**Date:** 2026-09-17 (supersedes the 2026-09-10 assessment)  
 **Assessor:** Principal Solutions Architect & CCO (independent verification)  
 **Product:** jolarca-marketplace — all-Europe B2B/B2C ecclesiastical/end-of-life marketplace  
 **Pilot market:** Lithuania (LT)  
@@ -11,9 +11,17 @@
 
 ---
 
-## Verdict: ❌ NO-GO for production · ✅ CONDITIONAL-GO for staging
+## Verdict: ❌ NO-GO for production · ❌ NO-GO for staging
 
-The system **cannot** be deployed to production in 3 days — not because of missing code (all Ansible roles and playbooks are implemented), but because the Proxmox hardware has not arrived. Once hardware is provisioned, the 3-day staging milestone is achievable.
+The system **cannot** be deployed in 3 days. Two independent blockers, not one:
+the Proxmox hardware has not arrived, **and** five of ten Ansible roles currently
+fail before reaching a host because they declare unresolvable defaults
+(BLOCKERS.md B16). The 2026-09-10 revision of this document attributed the delay
+to hardware alone; that claim did not survive verification — the roles were never
+run because their Molecule suite has never executed in CI (B17).
+
+> This document's own rule is "Evidence or it didn't happen." No role has a
+> recorded successful run, so no role is scored as working.
 
 **The correct action:** Deploy to a **staging environment** on Proxmox when it arrives. Production cutover is a separate gated step after all Critical blockers are resolved.
 
@@ -28,10 +36,10 @@ The system **cannot** be deployed to production in 3 days — not because of mis
 | R3 | Payments Boundary | **PROVEN** | ✅ Yes |
 | R4 | Database | **PARTIAL** | ✅ Yes |
 | R5 | GDPR | **PARTIAL** | ✅ Yes |
-| R6 | Deployment Path | **CODE READY** | ✅ Yes |
+| R6 | Deployment Path | **BROKEN (B16)** | ❌ No |
 | R7 | i.SAF / VAT | **PARTIAL** | ⚠️ High |
 
-**Score: 2 PROVEN (Critical), 1 CODE READY (Critical), 3 PARTIAL, 1 PARTIAL (High)**
+**Score: 2 PROVEN (Critical), 1 BROKEN (Critical, was scored CODE READY), 3 PARTIAL, 1 PARTIAL (High)**
 
 ---
 
@@ -50,7 +58,9 @@ jolarca app:
 jolarca-infrastructure:
   - terraform validate in CI (fmt + validate)
   - 3 OPA/Rego policies (no-public-ips, require-cmek, no-basic-iam-roles)
-  - Ansible Molecule: scaffolded but empty (all 10 roles fully populated; Molecule tests not yet written)
+  - Ansible Molecule: 9 scenarios written and tracked (all roles except app),
+    but CI has never executed one — ansible.yml runs molecule from the wrong
+    directory, so every leg aborts at scenario discovery (BLOCKERS.md B17)
 
 jolarca-compliance:
   - retention/tests/test_retention.py: 15 proofs (unittest)
@@ -62,7 +72,7 @@ jolarca-data: make check (seed schema + catalog lint + PII tripwire)
 
 ### Finding
 
-Application test suite is **production-grade** with coverage enforcement. Infrastructure tests are limited to Terraform validation. Ansible Molecule tests are scaffolded but empty.
+Application test suite is **production-grade** with coverage enforcement. Infrastructure tests are limited to Terraform validation. Ansible Molecule scenarios exist but have never been executed by CI, so no role has ever been tested end to end — and the untested roles turn out to be broken (BLOCKERS.md B16).
 
 ---
 
@@ -210,7 +220,7 @@ Consent and erasure are **architecturally sound**. Retention-as-code is exemplar
 
 ---
 
-## R6: Deployment Path — ✅ CODE READY (hardware pending)
+## R6: Deployment Path — ⛔ BROKEN (code present, fails before reaching a host)
 
 ### Evidence
 
@@ -220,15 +230,15 @@ Proxmox:
   ✅ terraform/modules/proxmox-vm + proxmox-lxc: Modules exist
   ❌ No physical host yet (hardware pending delivery)
 
-Ansible roles (ALL IMPLEMENTED):
+Ansible roles (source present; "implemented" does not mean "runs" — see BLOCKERS.md B16):
   ✅ hardening (242 lines) → 00-hardening.yml
-  ✅ wireguard (54 lines) → 10-wireguard.yml
-  ✅ vault (104 lines) → 30-vault.yml
-  ✅ postgresql (109 lines) → 40-postgresql.yml
+  ⛔ wireguard (54 lines) → 10-wireguard.yml — B16: 1 unresolvable default
+  ⛔ vault (104 lines) → 30-vault.yml — B16: 6 unresolvable defaults
+  ⛔ postgresql (109 lines) → 40-postgresql.yml — B16: 10 unresolvable defaults
   ✅ redis (47 lines) → 45-redis.yml
-  ✅ minio (74 lines) → 50-minio.yml
-  ✅ app (313 lines) → 65-app.yml
-  ✅ nginx (71 lines) → 70-nginx-edge.yml
+  ⛔ minio (74 lines) → 50-minio.yml — B16: 6 unresolvable defaults
+  ✅ app (313 lines) → 65-app.yml — B16 + handler defects fixed
+  ⛔ nginx (71 lines) → 70-nginx-edge.yml — B16: 5 unresolvable defaults
   ✅ backup (255 lines) → 80-backup.yml
   ✅ monitoring (194 lines) → 95-monitoring.yml
   ✅ nginx-hardening → 90-nginx-hardening.yml
