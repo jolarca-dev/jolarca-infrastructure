@@ -39,7 +39,7 @@
 #     RULEDOC are exempt from layer-3 literal hits; layers 1/2 unchanged.
 #     Additions to RULEDOC require an ADR — no blanket doc exemption.
 #
-# This file is the RECORD COPY (jolarca-infrastructure); hub CI pins a copy
+# This file is the RECORD COPY (jol-m-infrastructure); hub CI pins a copy
 # of it. Adding any other exception requires an ADR, not a code change.
 #
 # Usage: scripts/check-payment-boundary.sh [ROOT]
@@ -51,6 +51,7 @@ SELF="$(basename "${BASH_SOURCE[0]}")"
 EXCLUDES=(--exclude-dir=venv --exclude-dir=.venv --exclude-dir=node_modules
           --exclude-dir=.git --exclude-dir=.next --exclude-dir=__pycache__)
 FIXTURES=(--exclude=test_dependency_guard.py --exclude=test_compliance.py
+          --exclude=adr011-invariants.test.ts
           --exclude="$SELF" --exclude='*.tsbuildinfo' --exclude-dir=.next)
 # Ledger-vocabulary exemption list (relative to ROOT).
 VOCAB=(
@@ -168,8 +169,9 @@ if [ "${#FRONTEND_DIRS[@]}" -gt 0 ]; then
     local label="$1"; shift
     local p hits
     for p in "$@"; do
-      if hits="$(grep -rIn "${EXCLUDES[@]}" "${FIXTURES[@]}" \
+      if hits="$(grep -rIn "${EXCLUDES[@]}" \
                    --include='*.ts' --include='*.tsx' --include='*.js' --include='*.jsx' \
+                   "${FIXTURES[@]}" \
                    -E "$p" "${FRONTEND_DIRS[@]}" 2>/dev/null)"; then
         if ! ledger_excluded "$hits"; then
           echo "VIOLATION [$label]: pattern '$p' found (ADR-0005 Model A):"
