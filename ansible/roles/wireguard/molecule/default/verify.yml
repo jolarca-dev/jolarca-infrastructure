@@ -15,4 +15,14 @@
       ansible.builtin.command: sysctl net.ipv4.ip_forward
       register: ip_forward
       changed_when: false
-      failed_when: "=
+      failed_when: ip_forward.stdout | trim != "net.ipv4.ip_forward = 1"
+
+    - name: Verify the wg userspace tool is available
+      ansible.builtin.command: wg --version
+      changed_when: false
+
+    - name: Verify the persistent interface config directory exists
+      ansible.builtin.stat:
+        path: /etc/wireguard
+      register: wg_dir
+      failed_when: not wg_dir.stat.isdir
