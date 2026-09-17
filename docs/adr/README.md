@@ -11,3 +11,5 @@ line. Evidence copy goes to `jolarca-compliance`.
 | 0003 | Encrypted remote state migration | Accepted   |
 | 0004 | Mission/marketplace separation   | Accepted   |
 | 0005 | Two Django projects + single payment boundary (Model A) | Accepted |
+| 0006 | Redis co-located on app host     | Accepted   |
+| 0007 | Deployment model reconciliation (pilot vs. target) | Accepted |
