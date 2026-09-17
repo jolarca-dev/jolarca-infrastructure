@@ -10,6 +10,8 @@ collections:
     version: "3.7.0"
   - name: community.crypto
     version: "2.22.3"
+  - name: community.docker
+    version: "4.5.2"
 
 # Pinned roles — only external roles we depend on.
 roles:
