@@ -18,8 +18,8 @@ platforms:
       - all
 provisioner:
   name: ansible
-  roles_path:
-    - ../../../
+  env:
+    ANSIBLE_ROLES_PATH: ../../../
   inventory:
     group_vars:
       all:
