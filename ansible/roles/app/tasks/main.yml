@@ -173,7 +173,7 @@
     up -d --remove-orphans
   become_user: "{{ app_user }}"
   register: compose_up
-  changed_when: "'Started' in compose_up.stdout or 'Created' in compose_up.stdout"
+  changed_when: "'Started' in compose_up.stderr or 'Created' in compose_up.stderr"
   when: app_use_docker and app_deploy_mode == 'compose-monolith'
   tags: [app, docker]
 

@@ -61,7 +61,7 @@ for r in ${REPOS}; do
       ($m.visibility // "?"),
       ($m.default_branch // "?"),
       protstate,
-      yesno($m.allow_merge_commit | not),
+      yesno(($m.allow_merge_commit | not) and ($m.allow_rebase_merge | not)),
       yesno($m.allow_auto_merge),
       yesno($p.required_signatures.enabled),
       yesno($p.required_status_checks.strict),
