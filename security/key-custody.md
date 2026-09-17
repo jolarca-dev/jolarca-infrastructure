@@ -11,6 +11,7 @@ custodians; no single person may hold, use, or rotate it alone.
 
 | Credential                     | Custody                 | Storage        | Rotation            | Loss path                          |
 |--------------------------------|-------------------------|----------------|---------------------|------------------------------------|
+| SOPS age identity (marketplace) | 1 operator             | `~/.config/sops/age/keys.txt` (0600) + offline LUKS-encrypted USB | on personnel change or compromise | regenerate keypair; update `.sops.yaml` recipient; re-encrypt all `*.enc.yml` artifacts |
 | GitHub PAT — TF read-only      | CI secret, 1 operator   | repo secret `TF_GITHUB_TOKEN_READONLY` | 90d (runbook) | `../docs/runbooks/github-token-rotation.md` |
 | GitHub PAT — TF write          | CI env secret, 1 operator| env secret `TF_GITHUB_TOKEN_WRITE` (production env) | 90d (runbook) | same runbook; applies require re-review |
 | ansible-vault password — staging | 1 operator            | Vaultwarden    | on personnel change | re-encrypt vault files             |

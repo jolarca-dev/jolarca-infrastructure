@@ -4,8 +4,8 @@
 # custody. Counterpart config: church: jol-infrastructure .sops.yaml. PUBLIC recipient only.
 creation_rules:
   - path_regex: \.enc\.ya?ml$
-    age: age1h6knxanpsq332ufrh54mh5y0wgzhu43vgq8flh55hrnc2zvuwe8qjn4n47
+    age: age165q6nyn7vrrptsx4rpt6se7c834ys80hffkkkqd5qvqu6a45aahs7expj5
   - path_regex: \.enc\.json$
-    age: age1h6knxanpsq332ufrh54mh5y0wgzhu43vgq8flh55hrnc2zvuwe8qjn4n47
+    age: age165q6nyn7vrrptsx4rpt6se7c834ys80hffkkkqd5qvqu6a45aahs7expj5
   - path_regex: ^secrets/encrypted/
-    age: age1h6knxanpsq332ufrh54mh5y0wgzhu43vgq8flh55hrnc2zvuwe8qjn4n47
+    age: age165q6nyn7vrrptsx4rpt6se7c834ys80hffkkkqd5qvqu6a45aahs7expj5
