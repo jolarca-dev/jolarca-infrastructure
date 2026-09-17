@@ -19,7 +19,9 @@
 
     - name: Verify the wg userspace tool is available
       ansible.builtin.command: wg --version
+      register: wg_ver
       changed_when: false
+      failed_when: wg_ver.rc != 0
 
     - name: Verify the persistent interface config directory exists
       ansible.builtin.stat:

@@ -48,7 +48,9 @@ def main() -> int:
         try:
             # safe_load_all is lazy; consume it so late parse errors surface.
             list(yaml.safe_load_all(path.read_text(encoding="utf-8")))
-        except (yaml.YAMLError, UnicodeDecodeError) as exc:
+        except (yaml.YAMLError, UnicodeDecodeError, OSError) as exc:
+            # OSError covers unreadable files and filesystem errors: report and
+            # keep going so one bad path never hides the rest of the tree.
             first = str(exc).splitlines()[0] if str(exc) else exc.__class__.__name__
             broken.append(f"{path}: {first}")
 
