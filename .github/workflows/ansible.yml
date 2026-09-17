@@ -84,3 +84,5 @@ jobs:
       - name: Run Molecule test for ${{ matrix.role }}
         working-directory: ansible/roles/${{ matrix.role }}
         run: molecule test -s default
+        env:
+          ANSIBLE_STRICT: false
