@@ -75,7 +75,7 @@ jobs:
         run: |
           pipx install "ansible>=9,<10"
           pipx install molecule
-          pipx inject molecule molecule-docker docker
+          pipx inject molecule molecule-docker docker "ansible-core<2.18"
 
       - name: Install pinned collections
         working-directory: ansible
