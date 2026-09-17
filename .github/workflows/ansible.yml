@@ -74,7 +74,8 @@ jobs:
       - name: Install ansible + molecule
         run: |
           pipx install "ansible>=9,<11"
-          pipx install "molecule[docker]"
+          pipx install molecule
+          pipx inject molecule molecule-docker docker
 
       - name: Install pinned collections
         working-directory: ansible
