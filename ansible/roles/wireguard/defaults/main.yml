@@ -1,7 +1,7 @@
 ---
-wg_interface_name: "{{ wg_interface | default('wg0') }}"
-wg_listen_port: "{{ wg_port | default(51820) }}"
-wg_address: "{{ wg_address | default('10.10.1.0/24') }}"
+wg_interface_name: wg0
+wg_listen_port: 51820
+wg_address: '10.10.1.0/24'
 wg_peers: []
 # wg_peers example:
 #   - name: edge-staging

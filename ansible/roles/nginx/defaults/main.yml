@@ -1,9 +1,9 @@
 ---
-nginx_worker_processes: "{{ nginx_worker_processes | default('auto') }}"
-nginx_worker_connections: "{{ nginx_worker_connections | default(1024) }}"
-nginx_rate_limit_rps: "{{ nginx_rate_limit_rps | default(30) }}"
-nginx_rate_limit_burst: "{{ nginx_rate_limit_burst | default(50) }}"
-nginx_security_headers: "{{ nginx_security_headers | default(true) }}"
+nginx_worker_processes: auto
+nginx_worker_connections: 1024
+nginx_rate_limit_rps: 30
+nginx_rate_limit_burst: 50
+nginx_security_headers: true
 nginx_tls_cert: /etc/ssl/certs/ssl-cert-snakeoil.pem
 nginx_tls_key: /etc/ssl/private/ssl-cert-snakeoil.key
 nginx_upstreams: []
