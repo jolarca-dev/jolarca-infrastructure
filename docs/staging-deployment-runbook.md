@@ -236,10 +236,10 @@ Expected output:
 
 ---
 
-## Phase 5: Backup Configuration (60)
+## Phase 5: Backup Configuration (80)
 
 ```bash
-ansible-playbook playbooks/60-backup.yml \
+ansible-playbook playbooks/80-backup.yml \
   -i inventories/staging/hosts.yml \
   --diff
 ```

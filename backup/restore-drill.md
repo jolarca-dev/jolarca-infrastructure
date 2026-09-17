@@ -12,9 +12,9 @@ A.5.30 business continuity testing; SOC 2 A1.3).
    a point-in-time ≤ 15min before the drill marker (verifies RPO).
 3. **Offsite restore**: pull one borg archive from the offsite provider and
    extract a canary file (verifies the offsite path works cold).
-4. **Rebuild path**: rebuild one hardened node from zero using
-   `ansible/playbooks/90-disaster-recovery.yml` (when the ansible
-   workstream has landed).
+4. **Rebuild path**: rebuild one hardened node from zero using the
+   relevant Ansible playbooks (`00-hardening.yml` + `10-wireguard.yml` +
+   service-specific playbook). All roles are implemented.
 
 ## Pass criteria
 

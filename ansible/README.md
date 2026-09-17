@@ -29,8 +29,9 @@ vault/{staging,production}/ # ansible-vault encrypted secrets (dual control)
 ## Bootstrap order
 
 ```
-00-hardening → 10-wireguard → 20-postgresql → 30-vault → 40-minio →
-50-nginx → 60-backup
+00-hardening → 10-wireguard → 30-vault → 40-postgresql → 45-redis →
+50-minio → 65-app → 70-nginx-edge → 80-backup → 90-nginx-hardening →
+95-monitoring
 ```
 
 Skipping steps is a change-request exception, not a habit.

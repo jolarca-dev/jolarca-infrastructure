@@ -58,7 +58,7 @@ for resource in "${RESOURCES[@]}"; do
     new_key="${RENAME_MAP[$old_key]}"
     old_addr="${resource}[\"${old_key}\"]"
     new_addr="${resource}[\"${new_key}\"]"
-    
+
     # Check if the old address exists in state
     if terraform state list 2>/dev/null | grep -qF "$old_addr"; then
       echo "Moving: $old_addr → $new_addr"

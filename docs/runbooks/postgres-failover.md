@@ -1,6 +1,7 @@
 # Runbook: PostgreSQL failover
 
-**Status: skeleton — lands with the ansible `20-postgresql.yml` workstream.**
+**Status: skeleton — the ansible `40-postgresql.yml` playbook and role are implemented.
+This failover runbook lands when replication is configured (post-pilot, Model B per ADR-0007).**
 Decision gate: failover only when primary is confirmed unrecoverable within
 RTO budget (≤ 4h) or data-plane loss is already user-visible. Failover is a
 data-loss-risk event — RPO ≤ 15min is the promise, verify before you cut.
