@@ -18,8 +18,7 @@ jobs:
 
       - name: Install ansible tooling
         run: |
-          pipx install "ansible-lint==24.10.0"
-          pipx install "ansible-core<2.19"
+          pipx install "ansible-lint==24.10.0" --pip-args "ansible-core<2.19"
 
       - name: Install pinned collections
         working-directory: ansible
