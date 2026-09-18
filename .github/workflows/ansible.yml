@@ -73,15 +73,12 @@ jobs:
 
       - name: Install ansible + molecule
         run: |
-          pipx install "ansible>=9,<11"
-          pipx install "molecule[docker]"
+          pip install "ansible-core>=2.17,<2.18" molecule molecule-docker docker
 
       - name: Install pinned collections
         working-directory: ansible
         run: ansible-galaxy collection install -r requirements.yml
 
       - name: Run Molecule test for ${{ matrix.role }}
-        working-directory: ansible
+        working-directory: ansible/roles/${{ matrix.role }}
         run: molecule test -s default
-        env:
-          ROLE_NAME: ${{ matrix.role }}

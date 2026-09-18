@@ -1,6 +1,19 @@
 ---
 # App role defaults — Django + Next.js marketplace deployment.
 
+# ── Deployment mode (ADR-0007) ───────────────────────────────────────────
+# compose-monolith: pilot mode — uses the app repo's docker-compose.prod.yml
+#                   (all services on one VM: nginx, app, backend, worker,
+#                   beat, postgres, redis, elasticsearch).
+# compose-split:    target mode — uses infra-rendered separate compose files
+#                   (docker-compose.backend.yml + docker-compose.frontend.yml)
+#                   with external PostgreSQL, Redis, MinIO on dedicated VMs.
+# Plain literal: defaults/main.yml is the lowest-precedence var source, so any
+# group_vars/host_vars/extra-vars override already wins. Do NOT write this as
+# "{{ app_deploy_mode | default(...) }}" — self-reference in the same file that
+# defines it makes Ansible fail with "Recursive loop detected in template".
+app_deploy_mode: compose-monolith
+
 # ── Application ──────────────────────────────────────────────────────────
 app_user: jol
 app_group: jol
@@ -32,6 +45,9 @@ db_host: "10.10.1.3"
 db_port: 5432
 db_name: jol_marketplace
 db_user: jol_app
+# compose-monolith: PG runs inside compose stack → use Docker service name, no TLS.
+# compose-split:    PG runs on dedicated DB VM → WireGuard IP, TLS verify-full.
+db_sslmode: "{{ 'disable' if app_deploy_mode == 'compose-monolith' else 'verify-full' }}"
 
 # ── Vault ───────────────────────────────────────────────────────────────
 vault_addr: "https://10.10.1.4:8200"

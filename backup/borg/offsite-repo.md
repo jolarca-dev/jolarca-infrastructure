@@ -1,6 +1,6 @@
 # Offsite Borg repository specification
 
-**Status: reserved — lands with the backup workstream (`ansible/playbooks/50-backup.yml`).**
+**Status: implemented — backup role + `ansible/playbooks/80-backup.yml` are complete. Offsite target provisioning pending hardware.**
 
 ## Requirements (non-negotiable)
 

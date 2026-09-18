@@ -10,7 +10,7 @@ flowchart LR
     subgraph METAL["90% — bare metal (Ansible)"]
         EDGE["nginx edge<br/>TLS + rate limit"]
         APP["app hosts"]
-        DB[("PostgreSQL 16<br/>+ PostGIS/pgvector<br/>replication, PITR")]
+        DB[("PostgreSQL 17<br/>+ PostGIS/pgvector<br/>replication, PITR")]
         VAULT["HashiCorp Vault<br/>raft, auto-unseal"]
         MINIO["MinIO<br/>EU residency"]
         BORG["BorgBackup<br/>+ offsite copy"]

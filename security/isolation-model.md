@@ -17,7 +17,7 @@ CC6.1 (logical access); GDPR Art. 32 (security of processing).
 | 1 | Marketplace ↔ church-platform | No shared infra, state, credentials, or CI. Scope segregation is organizational, enforced technically (separate repos, orgs' IAM, separate networks). ONE sanctioned runtime crossing exists: the internal payment API (ADR-0005, `../docs/payment-api-contract.md`) — mTLS-only, PAN-free, and it shares no state, credentials, or CI. |
 | 2 | Bare metal ↔ GCP             | Traffic crosses ONLY via the WireGuard mesh. No other route may exist; any new route is a change to this document first. |
 | 3 | GKE ↔ internet               | Ingress only through the sanctioned ingress controller; egress only via Cloud NAT. No node-level public IPs (no-public-ips.rego). |
-| 4 | Bare metal ↔ internet        | Ingress only through the nginx edge (60-nginx-edge). Backend hosts have no public listeners. |
+| 4 | Bare metal ↔ internet        | Ingress only through the nginx edge (70-nginx-edge). Backend hosts have no public listeners. |
 | 5 | Operator ↔ production        | All writes via reviewed IaC/CI. Break-glass is an audited exception (terraform/README.md), never a workflow. |
 | 6 | Secrets ↔ everything          | Secrets exist in Vaultwarden/ansible-vault/runtime env only. Never in git, state, tfvars, images, logs, or issue trackers. |
 

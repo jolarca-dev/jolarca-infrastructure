@@ -6,7 +6,9 @@
 **Compliance:** CIS baseline hardening, WireGuard mesh, Vault secrets, BorgBackup
 
 > **Status:** This plan is a SPECIFICATION. The Ansible playbooks to execute it
-> do not yet exist. They must be written before deployment can proceed.
+> are now implemented (all 11 playbooks, 10 roles). Deployment can proceed
+> once Proxmox hardware is provisioned. See ADR-0007 for the pilot deployment
+> model decision (Model A: app-repo `docker-compose.prod.yml` on App VM).
 
 ---
 
@@ -259,7 +261,8 @@ borg prune --keep-daily=7 --keep-weekly=4 --keep-monthly=12 borg@offsite-eu:./jo
 #    Extract canary file → verify checksum
 
 # 4. Rebuild path
-#    Rebuild one node from zero using ansible/playbooks/90-disaster-recovery.yml
+#    Rebuild one node from zero using the relevant ansible playbook
+#    (e.g., 00-hardening + 10-wireguard + service-specific playbook)
 ```
 
 ---

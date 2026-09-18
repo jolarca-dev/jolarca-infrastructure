@@ -1,6 +1,6 @@
 # READINESS SCORECARD — jolarca-marketplace
 
-**Date:** 2026-09-02  
+**Date:** 2026-09-17 (supersedes the 2026-09-10 assessment)  
 **Assessor:** Principal Solutions Architect & CCO (independent verification)  
 **Product:** jolarca-marketplace — all-Europe B2B/B2C ecclesiastical/end-of-life marketplace  
 **Pilot market:** Lithuania (LT)  
@@ -11,9 +11,17 @@
 
 ---
 
-## Verdict: ❌ NO-GO for production · ✅ CONDITIONAL-GO for staging
+## Verdict: ❌ NO-GO for production · ❌ NO-GO for staging
 
-The system **cannot** be deployed to production in 3 days. The deployment infrastructure (Proxmox hardening, Ansible roles, WireGuard, Vault, nginx edge, backups) does not exist as executable code — it exists as reserved structure and documentation.
+The system **cannot** be deployed in 3 days. Two independent blockers, not one:
+the Proxmox hardware has not arrived, **and** five of ten Ansible roles currently
+fail before reaching a host because they declare unresolvable defaults
+(BLOCKERS.md B16). The 2026-09-10 revision of this document attributed the delay
+to hardware alone; that claim did not survive verification — the roles were never
+run because their Molecule suite has never executed in CI (B17).
+
+> This document's own rule is "Evidence or it didn't happen." No role has a
+> recorded successful run, so no role is scored as working.
 
 **The correct action:** Deploy to a **staging environment** on Proxmox when it arrives. Production cutover is a separate gated step after all Critical blockers are resolved.
 
@@ -28,10 +36,10 @@ The system **cannot** be deployed to production in 3 days. The deployment infras
 | R3 | Payments Boundary | **PROVEN** | ✅ Yes |
 | R4 | Database | **PARTIAL** | ✅ Yes |
 | R5 | GDPR | **PARTIAL** | ✅ Yes |
-| R6 | Deployment Path | **ABSENT** | ✅ Yes |
+| R6 | Deployment Path | **BROKEN (B16)** | ❌ No |
 | R7 | i.SAF / VAT | **PARTIAL** | ⚠️ High |
 
-**Score: 1 PROVEN (Critical), 4 PARTIAL, 1 ABSENT, 1 PARTIAL (High)**
+**Score: 2 PROVEN (Critical), 1 BROKEN (Critical, was scored CODE READY), 3 PARTIAL, 1 PARTIAL (High)**
 
 ---
 
@@ -50,7 +58,9 @@ jolarca app:
 jolarca-infrastructure:
   - terraform validate in CI (fmt + validate)
   - 3 OPA/Rego policies (no-public-ips, require-cmek, no-basic-iam-roles)
-  - Ansible Molecule: RESERVED (no roles populated)
+  - Ansible Molecule: 9 scenarios written and tracked (all roles except app),
+    but CI has never executed one — ansible.yml runs molecule from the wrong
+    directory, so every leg aborts at scenario discovery (BLOCKERS.md B17)
 
 jolarca-compliance:
   - retention/tests/test_retention.py: 15 proofs (unittest)
@@ -62,7 +72,7 @@ jolarca-data: make check (seed schema + catalog lint + PII tripwire)
 
 ### Finding
 
-Application test suite is **production-grade** with coverage enforcement. Infrastructure tests are limited to Terraform validation. Ansible Molecule tests are scaffolded but empty.
+Application test suite is **production-grade** with coverage enforcement. Infrastructure tests are limited to Terraform validation. Ansible Molecule scenarios exist but have never been executed by CI, so no role has ever been tested end to end — and the untested roles turn out to be broken (BLOCKERS.md B16).
 
 ---
 
@@ -159,19 +169,19 @@ Encryption at rest:
   ✅ GDPR Art. 32 alignment documented
 
 Backups:
-  ❌ BorgBackup: RESERVED (offsite-repo.md is a specification, not implementation)
-  ❌ ansible/playbooks/50-backup.yml: DOES NOT EXIST
-  ❌ No backup job configured
+  ✅ BorgBackup: Role implemented (255 lines); `80-backup.yml` playbook exists
+  ✅ Covers: pg_dump, WAL archiving, MinIO mirror, Vault snapshot, Borg offsite
+  ❌ No backup job RUNNING (needs hardware)
 
 Restore drill:
-  ⚠️ restore-drill.md: DOCUMENTED (RTO ≤ 4h, RPO ≤ 15min)
+  ✅ restore-drill.md: DOCUMENTED (RTO ≤ 4h, RPO ≤ 15min)
   ❌ No evidence of drill execution (no timestamps, no results)
-  ❌ Quarterly cadence not started
+  ❌ Quarterly cadence not started (needs hardware)
 ```
 
 ### Finding
 
-Database schema and encryption are production-ready. **Backups are not implemented.** The restore drill is documented but never executed. This is a **Critical blocker** — SOC 2 A1.3 and ISO 27001 A.5.29 require tested backups.
+Database schema and encryption are production-ready. **Backup code is implemented** (role + playbook). The restore drill is documented but never executed (requires hardware). This is a **Critical blocker** for production only — SOC 2 A1.3 and ISO 27001 A.5.29 require *tested* backups.
 
 ---
 
@@ -210,44 +220,64 @@ Consent and erasure are **architecturally sound**. Retention-as-code is exemplar
 
 ---
 
-## R6: Deployment Path — ❌ ABSENT
+## R6: Deployment Path — ⛔ BROKEN (code present, fails before reaching a host)
 
 ### Evidence
 
 ```
 Proxmox:
-  ❌ No Proxmox configuration exists
-  ❌ No VM/LXC layout defined
-  ❌ No Packer/templates for VM images
+  ✅ PROXMOX_DEPLOYMENT_PLAN.md: Complete specification (VM/LXC layout, Day 1–3)
+  ✅ terraform/modules/proxmox-vm + proxmox-lxc: Modules exist
+  ❌ No physical host yet (hardware pending delivery)
 
-Ansible roles:
-  ❌ ansible/roles/ contains ONLY .gitkeep files (0 playbooks)
-  ⚠️ Planned sequence: 00-hardening → 10-wireguard → 20-postgresql → 30-vault →
-     40-minio → 50-backup → 60-nginx-edge → 70-monitoring → 90-disaster-recovery
-  ❌ NONE of these playbooks exist
+Ansible roles (source present; "implemented" does not mean "runs" — see BLOCKERS.md B16):
+  ✅ hardening (242 lines) → 00-hardening.yml
+  ⛔ wireguard (54 lines) → 10-wireguard.yml — B16: 1 unresolvable default
+  ⛔ vault (104 lines) → 30-vault.yml — B16: 6 unresolvable defaults
+  ⛔ postgresql (109 lines) → 40-postgresql.yml — B16: 10 unresolvable defaults
+  ✅ redis (47 lines) → 45-redis.yml
+  ⛔ minio (74 lines) → 50-minio.yml — B16: 6 unresolvable defaults
+  ✅ app (313 lines) → 65-app.yml — B16 + handler defects fixed
+  ⛔ nginx (71 lines) → 70-nginx-edge.yml — B16: 5 unresolvable defaults
+  ✅ backup (255 lines) → 80-backup.yml
+  ✅ monitoring (194 lines) → 95-monitoring.yml
+  ✅ nginx-hardening → 90-nginx-hardening.yml
 
 WireGuard:
-  ⚠️ Documented in architecture.md and threat-model.md
-  ❌ 10-wireguard.yml: DOES NOT EXIST
-  ⚠️ Key rotation runbook: "skeleton — lands with the ansible 10-wireguard.yml workstream"
+  ✅ 10-wireguard.yml + wireguard role: IMPLEMENTED
+  ✅ Key generation, config template, systemd enable
+  ⚠️ Key rotation runbook: skeleton (lands post-deployment)
 
 Vault:
-  ⚠️ ansible-vault password custody documented (dual control)
-  ❌ HashiCorp Vault bootstrap: DOES NOT EXIST
-  ❌ 30-vault.yml: DOES NOT EXIST
+  ✅ 30-vault.yml + vault role: IMPLEMENTED (install, TLS, Raft, systemd)
+  ✅ docs/secrets-flow.md: HV → AV architecture documented
+  ✅ scripts/sync-hv-to-av.sh: Complete (140 lines)
+  ❌ Not bootstrapped (needs hardware + unseal ceremony)
 
 TLS / Reverse proxy:
-  ❌ 60-nginx-edge: "pending" (per audit report F-12)
-  ❌ No TLS configuration exists
+  ✅ 70-nginx-edge.yml + 90-nginx-hardening.yml: IMPLEMENTED
+  ✅ nginx role: config, security headers, rate limiting
+  ❌ Not deployed (needs hardware)
+
+Monitoring:
+  ✅ 95-monitoring.yml + monitoring role (194 lines): IMPLEMENTED
+  ✅ Prometheus + Grafana + Alertmanager configs in monitoring/
+  ❌ Not deployed (needs hardware)
 
 Rollback:
-  ⚠️ CONTRIBUTING.md: "risk class, blast radius, and rollback plan" required
-  ❌ No tested rollback procedure exists
+  ✅ scripts/rollback-test.sh: EXISTS
+  ✅ jolarca/scripts/deploy.sh --rollback: IMPLEMENTED
+  ❌ Never tested against live infrastructure
 ```
 
 ### Finding
 
-**The deployment infrastructure does not exist as executable code.** Everything is reserved structure, documentation, or scaffolded directories. This is the **single largest blocker**. The Proxmox server arriving in 3 days has no provisioning plan to deploy onto it.
+**The deployment infrastructure exists as source, not as code known to run.** All 10
+Ansible roles and 11 playbooks exist, but five of them (postgresql, minio, vault,
+nginx, wireguard) abort during variable resolution, before contacting a host, because
+they declare unresolvable defaults — see BLOCKERS.md B16. Physical hardware is not the
+sole remaining gap: B16 and B17 must close first, otherwise Day 2 of the staging plan
+fails at the first templated task.
 
 ---
 
@@ -278,27 +308,39 @@ i.SAF obligation is registered. **VIES is not wired to the live EU gateway** —
 
 ---
 
-## Gap Summary
+## Gap Summary (Updated 2026-09-17)
 
-| Gap | Severity | Blocks Production? | Blocks Staging? |
-|-----|----------|--------------------|-----------------|
-| Ansible roles empty (no provisioning) | Critical | ✅ YES | ✅ YES |
-| Backups not implemented | Critical | ✅ YES | No |
-| Restore drill never executed | Critical | ✅ YES | No |
-| DPIA-003 unsigned | Critical | ✅ YES | No |
-| VIES not wired (format-only) | High | ✅ YES (B2B) | No |
-| CodeQL/SAST disabled | High | No (risk-accept) | No |
-| Trivy missing in 3 repos | Medium | No (risk-accept) | No |
-| OSS registration incomplete | Medium | ✅ YES (B2C EU) | No |
-| No TLS/nginx edge | Critical | ✅ YES | ✅ YES |
-| No Vault bootstrap | Critical | ✅ YES | Partial |
-| No WireGuard playbook | Critical | ✅ YES | ✅ YES |
-| No monitoring/alerting | High | No (risk-accept) | No |
+| Gap | Severity | Blocks Production? | Blocks Staging? | Status |
+|-----|----------|--------------------|-----------------|---------|
+| B16: 5 roles declare unresolvable defaults | Critical | ✅ YES | ✅ YES | ❌ Open — found 2026-09-17 |
+| B17: Molecule never executes in CI | Critical | ✅ YES | ✅ YES | ❌ Open — found 2026-09-17 |
+| Proxmox hardware not delivered | Critical | ✅ YES | ✅ YES | ❌ Pending |
+| ~~PostgreSQL version mismatch (16 vs 17)~~ | ~~Critical~~ | — | — | ✅ RESOLVED (app repo updated to PG 17) |
+| ~~Deployment model unreconciled~~ | ~~High~~ | — | — | ✅ RESOLVED (ADR-0007 + app_deploy_mode, defects fixed) |
+| Restore drill never executed | Critical | ✅ YES | No | ❌ Needs hardware |
+| DPIA-003 unsigned | Critical | ✅ YES | No | ❌ Needs DPO |
+| VIES not wired (format-only) | High | ✅ YES (B2B) | No | ❌ Needs dev |
+| CodeQL/SAST disabled | High | No (risk-accept) | No | ❌ Needs enablement |
+| OSS registration incomplete | Medium | ✅ YES (B2C EU) | No | ❌ Needs VMI |
+| ~~Ansible roles empty~~ | ~~Critical~~ | — | — | ⚠️ Source written; 5/10 blocked by B16 |
+| ~~Backups not implemented~~ | ~~Critical~~ | — | — | ⚠️ Code exists; unrunnable-by-dependency (B16 vault/postgresql) and never executed |
+| ~~No TLS/nginx edge~~ | ~~Critical~~ | — | — | ⚠️ Code exists; nginx role blocked by B16 |
+| ~~No Vault bootstrap~~ | ~~Critical~~ | — | — | ⚠️ Code exists; vault role blocked by B16 |
+| ~~No WireGuard playbook~~ | ~~Critical~~ | — | — | ⚠️ Code exists; wireguard role blocked by B16 |
+| ~~No monitoring/alerting~~ | ~~High~~ | — | — | ⚠️ Code exists; defaults resolve, but never executed |
 
 ---
 
 ## Earliest Honest Production Date
 
-Given the Critical gaps (especially Ansible roles, backups, WireGuard, nginx edge, Vault), the earliest honest production deployment is **4–6 weeks**, not 3 days.
+Given that the infrastructure code is written but five roles are known not to run
+(B16), the timeline is:
 
-**3-day milestone should be:** Proxmox arrives → harden host → deploy **staging** environment → begin Ansible role development against real hardware.
+- **B16 + B17 remediation (1 day, no hardware needed):** rewrite 28 defaults; fix the molecule working-directory; land one green `molecule test` per role
+- **Staging (3 days from hardware arrival):** Proxmox install → VMs → run all playbooks → smoke tests
+- **Production (3–4 weeks from hardware arrival):** Staging soak (7d) + restore drill + DPIA + VIES + CodeQL
+
+The previous estimate of 4–6 weeks assumed 2–3 weeks of Ansible development. Most of
+that authoring is done; what remains is proving it executes. The critical path is now:
+**B16/B17 → hardware delivery → 3-day staging → 7-day soak → parallel compliance
+workstreams → production cutover.**

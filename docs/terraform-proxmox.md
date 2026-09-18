@@ -157,19 +157,19 @@ ansible-playbook playbooks/00-hardening.yml
 ansible-playbook playbooks/10-wireguard.yml
 
 # 3. Install PostgreSQL
-ansible-playbook playbooks/20-postgresql.yml
+ansible-playbook playbooks/40-postgresql.yml
 
 # 4. Install Vault
 ansible-playbook playbooks/30-vault.yml
 
 # 5. Install MinIO
-ansible-playbook playbooks/40-minio.yml
+ansible-playbook playbooks/50-minio.yml
 
 # 6. Configure nginx
-ansible-playbook playbooks/50-nginx.yml
+ansible-playbook playbooks/70-nginx-edge.yml
 
 # 7. Configure backup
-ansible-playbook playbooks/60-backup.yml
+ansible-playbook playbooks/80-backup.yml
 ```
 
 ## VM/LXC Layout

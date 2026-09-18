@@ -1,6 +1,8 @@
 ---
 # App role — deploy the Jolarca marketplace (Django backend + Next.js frontend).
-# Uses Docker Compose for the application stack. Secrets from Vault.
+# Supports two deployment modes per ADR-0007:
+#   compose-monolith (pilot): app repo's docker-compose.prod.yml, all-in-one VM
+#   compose-split (target): infra-rendered separate compose files, external DBs
 
 # ── System setup ────────────────────────────────────────────────────────
 
@@ -109,7 +111,7 @@
   notify: Restart app
   tags: [app, code]
 
-# ── Environment configuration (from Vault, no .env files) ──────────────
+# ── Environment configuration (from Vault, never committed to Git) ─────
 
 - name: Deploy environment configuration
   ansible.builtin.template:
@@ -122,7 +124,23 @@
   no_log: true
   tags: [app, config]
 
+# Pilot mode: .env.prod is the compose env_file, rendered from Vault KV.
+- name: Deploy .env.prod for compose-monolith mode
+  ansible.builtin.copy:
+    src: "{{ app_dir }}/config/app.env"
+    dest: "{{ app_dir }}/app/.env.prod"
+    owner: "{{ app_user }}"
+    group: "{{ app_group }}"
+    mode: "0640"
+    remote_src: true
+  when: app_deploy_mode == 'compose-monolith'
+  notify: Restart app
+  no_log: true
+  tags: [app, config]
+
 # ── Docker Compose deployment ──────────────────────────────────────────
+
+# --- compose-split mode (target: separate infra-rendered compose files) ---
 
 - name: Deploy Docker Compose file for backend
   ansible.builtin.template:
@@ -131,7 +149,7 @@
     owner: "{{ app_user }}"
     group: "{{ app_group }}"
     mode: "0640"
-  when: app_use_docker
+  when: app_use_docker and app_deploy_mode == 'compose-split'
   notify: Restart app
   tags: [app, docker]
 
@@ -142,38 +160,88 @@
     owner: "{{ app_user }}"
     group: "{{ app_group }}"
     mode: "0640"
-  when: app_use_docker
+  when: app_use_docker and app_deploy_mode == 'compose-split'
   notify: Restart frontend
+  tags: [app, docker]
+
+# --- compose-monolith mode (pilot: app repo's docker-compose.prod.yml) ---
+
+- name: Deploy compose-monolith stack
+  ansible.builtin.command: >
+    docker compose -f {{ app_dir }}/app/docker-compose.prod.yml
+    --env-file {{ app_dir }}/app/.env.prod
+    up -d --remove-orphans
+  become_user: "{{ app_user }}"
+  register: compose_up
+  changed_when: "'Started' in compose_up.stderr or 'Created' in compose_up.stderr"
+  when: app_use_docker and app_deploy_mode == 'compose-monolith'
   tags: [app, docker]
 
 # ── Django migrations & static files ──────────────────────────────────
 
-- name: Wait for database to be reachable
+- name: Wait for database to be reachable (compose-split)
   ansible.builtin.wait_for:
     host: "{{ db_host }}"
     port: "{{ db_port }}"
     timeout: 30
+  when: app_deploy_mode == 'compose-split'
   tags: [app, migrate]
 
-- name: Run Django database migrations
+- name: Wait for compose-internal database (compose-monolith)
+  ansible.builtin.command: >
+    docker compose -f {{ app_dir }}/app/docker-compose.prod.yml
+    --env-file {{ app_dir }}/app/.env.prod
+    exec -T postgres pg_isready -U {{ db_user }}
+  become_user: "{{ app_user }}"
+  register: pg_ready
+  retries: 10
+  delay: 5
+  until: pg_ready.rc == 0
+  changed_when: false
+  when: app_use_docker and app_deploy_mode == 'compose-monolith'
+  tags: [app, migrate]
+
+- name: Run Django database migrations (compose-split)
   ansible.builtin.command: >
     docker compose -f {{ app_dir }}/docker-compose.backend.yml
     exec -T backend python manage.py migrate --noinput
   become_user: "{{ app_user }}"
   changed_when: true
-  when: app_use_docker
+  when: app_use_docker and app_deploy_mode == 'compose-split'
   tags: [app, migrate]
 
-- name: Collect Django static files
+- name: Run Django database migrations (compose-monolith)
+  ansible.builtin.command: >
+    docker compose -f {{ app_dir }}/app/docker-compose.prod.yml
+    --env-file {{ app_dir }}/app/.env.prod
+    exec -T backend python manage.py migrate --noinput
+  become_user: "{{ app_user }}"
+  changed_when: true
+  when: app_use_docker and app_deploy_mode == 'compose-monolith'
+  tags: [app, migrate]
+
+- name: Collect Django static files (compose-split)
   ansible.builtin.command: >
     docker compose -f {{ app_dir }}/docker-compose.backend.yml
     exec -T backend python manage.py collectstatic --noinput
   become_user: "{{ app_user }}"
   changed_when: true
-  when: app_use_docker
+  when: app_use_docker and app_deploy_mode == 'compose-split'
   tags: [app, static]
 
-# ── Systemd services ──────────────────────────────────────────────────
+- name: Collect Django static files (compose-monolith)
+  ansible.builtin.command: >
+    docker compose -f {{ app_dir }}/app/docker-compose.prod.yml
+    --env-file {{ app_dir }}/app/.env.prod
+    exec -T backend python manage.py collectstatic --noinput
+  become_user: "{{ app_user }}"
+  changed_when: true
+  when: app_use_docker and app_deploy_mode == 'compose-monolith'
+  tags: [app, static]
+
+# ── Systemd services (compose-split mode only) ────────────────────────
+# In compose-monolith mode, Docker Compose handles restarts via
+# restart: unless-stopped and no separate systemd units are needed.
 
 - name: Deploy backend systemd service
   ansible.builtin.template:
@@ -182,7 +250,7 @@
     owner: root
     group: root
     mode: "0644"
-  when: app_use_docker
+  when: app_use_docker and app_deploy_mode == 'compose-split'
   notify:
     - Reload systemd
     - Restart app
@@ -195,7 +263,7 @@
     owner: root
     group: root
     mode: "0644"
-  when: app_use_docker
+  when: app_use_docker and app_deploy_mode == 'compose-split'
   notify:
     - Reload systemd
     - Restart frontend
@@ -207,7 +275,7 @@
     enabled: true
     state: started
     daemon_reload: true
-  when: app_use_docker
+  when: app_use_docker and app_deploy_mode == 'compose-split'
   tags: [app, service]
 
 - name: Enable and start frontend service
@@ -216,5 +284,29 @@
     enabled: true
     state: started
     daemon_reload: true
-  when: app_use_docker
+  when: app_use_docker and app_deploy_mode == 'compose-split'
   tags: [app, service]
+
+# ── Health verification ───────────────────────────────────────────────
+
+- name: Verify app health (compose-monolith)
+  ansible.builtin.uri:
+    url: "http://127.0.0.1:{{ django_port }}/api/v1/health/"
+    status_code: [200]
+  register: health_check
+  retries: 5
+  delay: 10
+  until: health_check is not failed
+  when: app_deploy_mode == 'compose-monolith'
+  tags: [app, verify]
+
+- name: Verify app health (compose-split)
+  ansible.builtin.uri:
+    url: "http://127.0.0.1:{{ django_port }}/api/v1/health/"
+    status_code: [200]
+  register: health_check
+  retries: 5
+  delay: 10
+  until: health_check is not failed
+  when: app_deploy_mode == 'compose-split'
+  tags: [app, verify]

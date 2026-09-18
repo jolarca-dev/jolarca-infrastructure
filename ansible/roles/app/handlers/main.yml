@@ -12,8 +12,30 @@
   ansible.builtin.systemd:
     name: jol-backend
     state: restarted
+  when: app_deploy_mode == 'compose-split'
 
 - name: Restart frontend
   ansible.builtin.systemd:
     name: jol-frontend
     state: restarted
+  when: app_deploy_mode == 'compose-split'
+
+# compose-monolith mode renders no jol-backend/jol-frontend systemd units, so the
+# restarts above are skipped and the app repo's own stack is reconciled instead.
+# Both notify topics map to this one handler: "docker compose up -d" converges the
+# whole stack, so restarting it twice for one run would be pointless churn.
+#
+# This is deliberately NOT a block/rescue around the systemd tasks: rescue cannot
+# tell "this mode has no such unit" apart from "the unit exists and failed to
+# start", so it would report a green run over a dead service.
+- name: Restart compose-monolith stack
+  ansible.builtin.command: >
+    docker compose -f {{ app_dir }}/app/docker-compose.prod.yml
+    --env-file {{ app_dir }}/app/.env.prod
+    up -d --remove-orphans
+  become_user: "{{ app_user }}"
+  changed_when: true
+  listen:
+    - Restart app
+    - Restart frontend
+  when: app_deploy_mode == 'compose-monolith'
