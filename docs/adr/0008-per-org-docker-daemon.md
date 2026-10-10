@@ -1,12 +1,23 @@
 # ADR-0008: Per-org Docker daemon for marketplace scope
 
-- **Status:** Proposed (pending operator acceptance + maintenance window)
+- **Status:** Accepted (executed + verified 2026-10-10)
 - **Date:** 2026-10-10
 - **Deciders:** org owner (solo era)
 - **Compliance:** ISO 27001 A.8.13 · PCI-DSS Req 1/2/3 scope containment · GDPR Art. 32
 - **Amendment (2026-10-10, post-Phase-1):** migration method corrected from
   logical-restore to **physical volume copy** (initdb/AOF evidence below); network
   and containerd details corrected to match the deployed `docker-jolarca.service`.
+- **Accepted (2026-10-10):** Phase 2/3 maintenance window executed. The marketplace
+  (8 services) now runs on `docker-jolarca` as compose project `jolarca-marketplace-prod`;
+  the church daemon is drained to 0 marketplace containers with its old volumes/images
+  **retained** as the rollback anchor (Phase 4 cleanup deferred). Independently verified:
+  PCI fingerprint `rows=8957 tables=39` == baseline, `healthz` HTTP 200 on PCI nginx
+  (80/443), boot-durable (units enabled, `RestartPolicy=unless-stopped`), crontab repointed
+  to `unix:///run/docker-jolarca/docker.sock`. **Closes findings D-03 and D-04.**
+  Mid-window defect fixed: the volume-existence guard ran as user `jol` against the
+  root-only church data-root (`drwx--x--x`) and falsely reported "missing", aborting after
+  `down` (clean rollback); corrected to a root-visible `pkexec test -d` pre-checked in
+  preflight before any downtime.
 
 ## Context
 
