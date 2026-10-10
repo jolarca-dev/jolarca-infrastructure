@@ -13,3 +13,4 @@ line. Evidence copy goes to `jolarca-compliance`.
 | 0005 | Two Django projects + single payment boundary (Model A) | Accepted |
 | 0006 | Redis co-located on app host     | Accepted   |
 | 0007 | Deployment model reconciliation (pilot vs. target) | Accepted |
+| 0008 | Per-org Docker daemon for marketplace scope | Proposed |
