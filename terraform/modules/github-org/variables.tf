@@ -1,7 +1,18 @@
 variable "org" {
-  description = "GitHub organization name (marketplace scope lives in the same org but is scope-segregated by repo set)."
+  description = "GitHub organization name for the marketplace scope."
   type        = string
-  default     = "journeyoflife-org"
+  # CORRECTED 2026-09-25 (jolarca-control docs/drift-findings.md D-06). Was
+  # "journeyoflife-org", which has been wrong since the 2026-09-02 org transfer
+  # that moved all five jolarca* repositories to jolarca-dev. The provider
+  # `owner` follows this value, so every plan run against the old default was
+  # addressing the mission-platform org — where these names survive only as
+  # 2-hop redirect stubs.
+  #
+  # NOTE: the live terraform.tfstate was last written 2026-08-31, BEFORE the
+  # transfer, so its full_name attributes still read journeyoflife-org/*.
+  # Correcting this variable makes config agree with reality; it does NOT
+  # repair the state. See the migration runbook in jolarca-control.
+  default = "jolarca-dev"
 }
 
 variable "repositories" {
@@ -14,7 +25,7 @@ variable "repositories" {
   }))
 
   # ADR-0004 R1/R3 — project separation: this module's jurisdiction is the
-  # MARKETPLACE fleet (jol-m-*) only. Mission-platform repos (jol-*) must
+  # MARKETPLACE fleet (jolarca*) only. Mission-platform repos (jol-*) must
   # never appear here; mixing PCI-scoped marketplace state with mission
   # governance is a compliance boundary violation (and the CI fleet guard
   # scripts/check-fleet-separation.sh enforces the reverse direction).

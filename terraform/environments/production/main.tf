@@ -1,6 +1,25 @@
 # Root configuration — marketplace GitHub org baseline (production scope).
 # Compliance: ISO 27001 A.8.13, SOC 2 CC6.1/CC8.1.
 #
+# ══════════════════════════════════════════════════════════════════════════
+# FROZEN — DO NOT PLAN OR APPLY FROM THIS ROOT (2026-09-25)
+# ══════════════════════════════════════════════════════════════════════════
+# The GitHub-organization governance below has been superseded by
+# jolarca-dev/jolarca-control. That repository now declares the same six live
+# repositories from a repos/*.yml allow-list. Running plan/apply here creates
+# dual ownership of PCI-DSS-scoped production resources (D-13) and will fail
+# on the branch-protection state mismatch described in
+# terraform/modules/github-org/branch-protection.tf (D-08).
+#
+# Follow jolarca-control/docs/state-migration-runbook.md instead. Its step 5
+# removes the GitHub section from this file in the same change window that the
+# state moves — do not remove it beforehand, or the orphaned state entries will
+# make the next plan propose destroying real repositories.
+#
+# Step 0 of that runbook (verified off-host state backup) has NOT been done:
+# terraform.tfstate here is the only copy of the ownership record (D-02).
+# ══════════════════════════════════════════════════════════════════════════
+#
 # This file manages:
 #   1. GitHub org governance (existing — live)
 #   2. Proxmox VMs/LXCs (90% plane — lands after staging validation)

@@ -1,12 +1,26 @@
 # fleet-separation-guard.yml — ADR-0004 R2/R3 enforcement.
 #
-# The org hosts TWO projects that must never mix: mission platform (jol-*)
-# and marketplace (jol-m-*, PCI-DSS scope). This guard proves, on every
-# relevant change and weekly, that the org's jol-m-* repo set matches the
-# terraform fleet map EXACTLY:
-#   - out-of-band jol-m-* creation  -> incident (48h import rule)
+# SUPERSEDED (2026-09-25): the authoritative copy now lives in
+# jolarca-dev/jolarca-control at .github/workflows/fleet-separation-guard.yml,
+# where it validates the repos/*.yml allow-list instead of parsing a Terraform
+# variable default. This copy is retained only until the state migration in
+# jolarca-control/docs/state-migration-runbook.md retires modules/github-org;
+# delete it in that same change window (runbook step 5).
+#
+# The GitHub estate hosts TWO projects that must never mix: mission platform
+# (jol-*, journeyoflife-org) and marketplace (jolarca*, jolarca-dev, PCI-DSS
+# scope). This guard proves, on every relevant change and weekly, that the org's
+# jolarca* repo set matches the terraform fleet map EXACTLY:
+#   - out-of-band jolarca* creation -> incident (48h import rule, ADR-0004 R2)
 #   - fleet repo missing from org   -> drift/deletion alarm
+#   - mission-platform (jol-*) entry in the fleet map -> ADR-0004 R3 violation
 # Read-only against the org; runs with the read-scoped token.
+#
+# Naming note: the fleet was jol-m-* until the 2026-08-31 rename and the
+# 2026-09-02 transfer to jolarca-dev. This header described it as jol-m-*
+# for three weeks afterwards (D-11); corrected 2026-09-25. The canonical
+# old->new mapping is jol-infrastructure
+# docs/compliance/rename-registry-jolm-to-jolarca.md.
 name: fleet-separation-guard
 on:
   push:
