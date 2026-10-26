@@ -42,4 +42,22 @@ resource "github_branch_protection" "main" {
   allows_force_pushes             = false
   allows_deletions                = false
   require_conversation_resolution = true
+
+  # ADDED 2026-09-25 while this root is FROZEN (D-13).
+  #
+  # STATE/CONFIG MISMATCH — read before planning (D-08). This for_each covers
+  # all five repos, but the live state holds a rule for `jolarca` ONLY. All six
+  # repos do have protection on GitHub — it was applied out-of-band via
+  # `gh api` during the 2026-09-17 delivery-chain audit. A plan from this root
+  # would therefore propose CREATING four rules that already exist, and GitHub
+  # permits only one protection rule per branch pattern, so it would fail with
+  # a conflict. Do not "fix" that by deleting the live rules.
+  #
+  # Also note this module passes require_code_owner_reviews = false from
+  # environments/production/main.tf while the live value is TRUE on all five
+  # jolarca* repos. Applying from here would have silently WEAKENED CODEOWNERS
+  # enforcement. jolarca-control encodes the verified live value instead.
+  lifecycle {
+    prevent_destroy = true
+  }
 }

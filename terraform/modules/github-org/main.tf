@@ -34,6 +34,14 @@ resource "github_repository" "repos" {
 
   # Note: has_issues/has_wiki/has_projects are managed by the provider at
   # their defaults; tighten in a follow-up once workflow needs are settled.
+
+  # ADDED 2026-09-25 while this root is FROZEN pending migration to
+  # jolarca-control (docs/drift-findings.md D-13). These are live PCI-DSS-scoped
+  # repositories. A plan that would destroy or replace one must abort loudly
+  # rather than proceed. This mirrors the doctrine already used by jol-control.
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 # Dependency scanning (Dependabot alerts) on every managed repo.

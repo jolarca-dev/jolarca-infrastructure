@@ -76,7 +76,10 @@ variable "ssh_public_keys" {
 variable "org" {
   description = "GitHub organization."
   type        = string
-  default     = "journeyoflife-org"
+  # CORRECTED 2026-09-25 (D-06). The marketplace fleet moved to jolarca-dev on
+  # 2026-09-02; this default still pointed at journeyoflife-org, so the
+  # provider owner — and therefore every plan — targeted the wrong org.
+  default = "jolarca-dev"
 }
 
 variable "enable_branch_protection" {
